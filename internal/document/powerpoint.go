@@ -5,10 +5,13 @@ import (
 	"bytes"
 	"encoding/xml"
 	"fmt"
+	"html"
 	"io"
 	"os"
 	"path/filepath"
 	"regexp"
+	"sort"
+	"strconv"
 	"strings"
 )
 
@@ -18,13 +21,11 @@ type PowerPointDocument struct {
 	zipFile  *zip.ReadCloser
 	slides   map[string]*slideContent
 	modified bool
-	tempBuf  *bytes.Buffer
 }
 
 // slideContent holds the content of a single slide
 type slideContent struct {
 	path    string
-	content []byte
 	xmlDoc  string
 }
 
@@ -45,7 +46,6 @@ func OpenPowerPointDocument(path string) (*PowerPointDocument, error) {
 		path:    path,
 		zipFile: reader,
 		slides:  make(map[string]*slideContent),
-		tempBuf: new(bytes.Buffer),
 	}
 
 	// Load all slides
@@ -81,7 +81,6 @@ func (d *PowerPointDocument) loadSlides() error {
 
 			d.slides[file.Name] = &slideContent{
 				path:    file.Name,
-				content: content,
 				xmlDoc:  string(content),
 			}
 		}
@@ -94,18 +93,31 @@ func (d *PowerPointDocument) loadSlides() error {
 func (d *PowerPointDocument) GetText() (string, error) {
 	var allText strings.Builder
 
-	// Process each slide in order
-	for i := 1; i <= len(d.slides); i++ {
-		slidePath := fmt.Sprintf("ppt/slides/slide%d.xml", i)
-		slide, exists := d.slides[slidePath]
-		if !exists {
-			continue
+	// Process slides by finding all that match the pattern
+	var slideNums []int
+	for path := range d.slides {
+		if strings.HasPrefix(path, "ppt/slides/slide") && strings.HasSuffix(path, ".xml") {
+			// Extract slide number from path like "ppt/slides/slide1.xml"
+			baseName := strings.TrimPrefix(path, "ppt/slides/slide")
+			baseName = strings.TrimSuffix(baseName, ".xml")
+			if num, err := strconv.Atoi(baseName); err == nil {
+				slideNums = append(slideNums, num)
+			}
 		}
-
+	}
+	
+	// Sort slide numbers to process in order
+	sort.Ints(slideNums)
+	
+	// Process each slide in order
+	for _, num := range slideNums {
+		slidePath := fmt.Sprintf("ppt/slides/slide%d.xml", num)
+		slide := d.slides[slidePath]
+		
 		// Extract text from the slide
 		text := extractTextFromSlide(slide.xmlDoc)
 		if text != "" {
-			allText.WriteString(fmt.Sprintf("Slide %d:\n%s\n\n", i, text))
+			allText.WriteString(fmt.Sprintf("Slide %d:\n%s\n\n", num, text))
 		}
 	}
 
@@ -123,12 +135,8 @@ func extractTextFromSlide(xmlContent string) string {
 	
 	for _, match := range matches {
 		if len(match) > 1 {
-			// Unescape HTML entities
-			text := strings.ReplaceAll(match[1], "&lt;", "<")
-			text = strings.ReplaceAll(text, "&gt;", ">")
-			text = strings.ReplaceAll(text, "&amp;", "&")
-			text = strings.ReplaceAll(text, "&quot;", "\"")
-			text = strings.ReplaceAll(text, "&apos;", "'")
+			// Unescape HTML entities using standard library
+			text := html.UnescapeString(match[1])
 			texts = append(texts, text)
 		}
 	}
@@ -141,8 +149,6 @@ func (d *PowerPointDocument) ReplaceText(old, new string) error {
 	if old == "" {
 		return fmt.Errorf("search text cannot be empty")
 	}
-
-	replacementCount := 0
 
 	// Process each slide
 	for _, slide := range d.slides {
@@ -162,7 +168,6 @@ func (d *PowerPointDocument) ReplaceText(old, new string) error {
 		if modified != originalContent {
 			slide.xmlDoc = modified
 			d.modified = true
-			replacementCount++
 		}
 	}
 
@@ -230,18 +235,16 @@ func (d *PowerPointDocument) Save() error {
 			if err != nil {
 				return fmt.Errorf("failed to open %s: %w", file.Name, err)
 			}
+			defer reader.Close()
 			
 			writer, err := w.Create(file.Name)
 			if err != nil {
-				reader.Close()
 				return fmt.Errorf("failed to create %s in zip: %w", file.Name, err)
 			}
 			
 			if _, err := io.Copy(writer, reader); err != nil {
-				reader.Close()
 				return fmt.Errorf("failed to copy %s: %w", file.Name, err)
 			}
-			reader.Close()
 		}
 	}
 
@@ -250,9 +253,40 @@ func (d *PowerPointDocument) Save() error {
 		return fmt.Errorf("failed to close zip writer: %w", err)
 	}
 
-	// Write to file
-	if err := os.WriteFile(d.path, buf.Bytes(), 0644); err != nil {
-		return fmt.Errorf("failed to write file: %w", err)
+	// Write to a temporary file first for atomic save
+	dir := filepath.Dir(d.path)
+	tmpFile, err := os.CreateTemp(dir, "ppt_save_*.tmp")
+	if err != nil {
+		return fmt.Errorf("failed to create temp file: %w", err)
+	}
+	tmpPath := tmpFile.Name()
+	
+	// Ensure temp file is cleaned up
+	defer func() {
+		if _, err := os.Stat(tmpPath); err == nil {
+			os.Remove(tmpPath)
+		}
+	}()
+	
+	// Write content to temp file
+	if _, err := tmpFile.Write(buf.Bytes()); err != nil {
+		tmpFile.Close()
+		return fmt.Errorf("failed to write temp file: %w", err)
+	}
+	
+	// Ensure data is flushed to disk
+	if err := tmpFile.Sync(); err != nil {
+		tmpFile.Close()
+		return fmt.Errorf("failed to sync temp file: %w", err)
+	}
+	
+	if err := tmpFile.Close(); err != nil {
+		return fmt.Errorf("failed to close temp file: %w", err)
+	}
+	
+	// Atomically replace the original file
+	if err := os.Rename(tmpPath, d.path); err != nil {
+		return fmt.Errorf("failed to rename temp file: %w", err)
 	}
 
 	return nil
