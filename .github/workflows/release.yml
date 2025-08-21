@@ -1,0 +1,174 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    name: Build binaries
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        include:
+          # Windows
+          - goos: windows
+            goarch: amd64
+            binary_name: pyhub-documents-cli.exe
+            asset_name: pyhub-documents-cli-windows-amd64.exe
+          
+          # macOS Intel
+          - goos: darwin
+            goarch: amd64
+            binary_name: pyhub-documents-cli
+            asset_name: pyhub-documents-cli-darwin-amd64
+          
+          # macOS Apple Silicon
+          - goos: darwin
+            goarch: arm64
+            binary_name: pyhub-documents-cli
+            asset_name: pyhub-documents-cli-darwin-arm64
+          
+          # Linux
+          - goos: linux
+            goarch: amd64
+            binary_name: pyhub-documents-cli
+            asset_name: pyhub-documents-cli-linux-amd64
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.21'
+
+      - name: Get version from tag
+        id: version
+        run: echo "VERSION=${GITHUB_REF#refs/tags/}" >> $GITHUB_OUTPUT
+
+      - name: Build binary
+        env:
+          GOOS: ${{ matrix.goos }}
+          GOARCH: ${{ matrix.goarch }}
+          CGO_ENABLED: 0
+        run: |
+          go build -ldflags="-s -w -X main.version=${{ steps.version.outputs.VERSION }}" \
+            -o ${{ matrix.binary_name }}
+          
+          # Rename to platform-specific name
+          mv ${{ matrix.binary_name }} ${{ matrix.asset_name }}
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: binary-${{ matrix.goos }}-${{ matrix.goarch }}
+          path: ${{ matrix.asset_name }}
+
+  release:
+    name: Create Release
+    needs: build
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: binaries
+          pattern: binary-*
+          merge-multiple: true
+
+      - name: List binaries
+        run: |
+          echo "Downloaded binaries:"
+          ls -la binaries/
+
+      - name: Generate checksums
+        run: |
+          cd binaries
+          sha256sum * > checksums.txt
+          echo "Checksums:"
+          cat checksums.txt
+
+      - name: Get version from tag
+        id: version
+        run: echo "VERSION=${GITHUB_REF#refs/tags/}" >> $GITHUB_OUTPUT
+
+      - name: Generate release notes
+        id: release_notes
+        run: |
+          cat << EOF > release_notes.md
+          ## Release ${{ steps.version.outputs.VERSION }}
+          
+          ### 📦 Downloads
+          
+          #### Windows
+          - [pyhub-documents-cli-windows-amd64.exe](https://github.com/${{ github.repository }}/releases/download/${{ steps.version.outputs.VERSION }}/pyhub-documents-cli-windows-amd64.exe)
+          
+          #### macOS
+          - [Intel (amd64)](https://github.com/${{ github.repository }}/releases/download/${{ steps.version.outputs.VERSION }}/pyhub-documents-cli-darwin-amd64)
+          - [Apple Silicon (arm64)](https://github.com/${{ github.repository }}/releases/download/${{ steps.version.outputs.VERSION }}/pyhub-documents-cli-darwin-arm64)
+          
+          #### Linux
+          - [amd64](https://github.com/${{ github.repository }}/releases/download/${{ steps.version.outputs.VERSION }}/pyhub-documents-cli-linux-amd64)
+          
+          ### 🔐 Checksums
+          
+          Please verify the checksums after downloading:
+          \`\`\`
+          $(cat binaries/checksums.txt)
+          \`\`\`
+          
+          ### 📝 What's Changed
+          
+          See the [full changelog](https://github.com/${{ github.repository }}/compare/$(git describe --tags --abbrev=0 ${{ steps.version.outputs.VERSION }}^)...${{ steps.version.outputs.VERSION }}) for details.
+          
+          ### 📖 Installation
+          
+          #### Windows
+          \`\`\`powershell
+          # Download the executable
+          Invoke-WebRequest -Uri "https://github.com/${{ github.repository }}/releases/download/${{ steps.version.outputs.VERSION }}/pyhub-documents-cli-windows-amd64.exe" -OutFile "pyhub-documents-cli.exe"
+          
+          # Add to PATH or move to a directory in PATH
+          \`\`\`
+          
+          #### macOS/Linux
+          \`\`\`bash
+          # Download the appropriate binary
+          # For macOS Intel:
+          curl -L -o pyhub-documents-cli https://github.com/${{ github.repository }}/releases/download/${{ steps.version.outputs.VERSION }}/pyhub-documents-cli-darwin-amd64
+          
+          # For macOS Apple Silicon:
+          curl -L -o pyhub-documents-cli https://github.com/${{ github.repository }}/releases/download/${{ steps.version.outputs.VERSION }}/pyhub-documents-cli-darwin-arm64
+          
+          # For Linux:
+          curl -L -o pyhub-documents-cli https://github.com/${{ github.repository }}/releases/download/${{ steps.version.outputs.VERSION }}/pyhub-documents-cli-linux-amd64
+          
+          # Make it executable
+          chmod +x pyhub-documents-cli
+          
+          # Move to PATH
+          sudo mv pyhub-documents-cli /usr/local/bin/
+          \`\`\`
+          EOF
+
+      - name: Create Release
+        uses: softprops/action-gh-release@v1
+        with:
+          name: Release ${{ steps.version.outputs.VERSION }}
+          body_path: release_notes.md
+          draft: false
+          prerelease: ${{ contains(steps.version.outputs.VERSION, '-') }}
+          files: |
+            binaries/*
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

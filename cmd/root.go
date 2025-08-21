@@ -8,11 +8,6 @@ import (
 )
 
 var (
-	// Version information (set by ldflags during build)
-	version = "dev"
-	commit  = "none"
-	date    = "unknown"
-
 	// Configuration flags
 	cfgFile string
 	verbose bool
@@ -40,7 +35,7 @@ Examples:
 
   # Generate content with AI (coming soon)
   pyhub-documents-cli generate --type blog --prompt "Docker best practices" --output blog.md`,
-	Version: version,
+	Version: Version,
 }
 
 // Execute adds all child commands to the root command and sets flags appropriately
@@ -64,7 +59,7 @@ func init() {
   Version:    %s
   Commit:     %s
   Built:      %s
-`, version, commit, date))
+`, Version, Commit, BuildDate))
 }
 
 // initConfig reads in config file and ENV variables if set
