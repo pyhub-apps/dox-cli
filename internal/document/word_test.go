@@ -36,6 +36,11 @@ func TestOpenWordDocument(t *testing.T) {
 			wantErr: true,
 			errMsg:  "invalid docx format",
 		},
+		{
+			name:    "valid empty docx file",
+			path:    "testdata/empty.docx",
+			wantErr: false,
+		},
 	}
 
 	for _, tt := range tests {
@@ -66,43 +71,77 @@ func TestOpenWordDocument(t *testing.T) {
 }
 
 func TestWordDocument_GetText(t *testing.T) {
-	// Create a test document for this test
-	doc, err := OpenWordDocument("testdata/sample.docx")
-	if err != nil {
-		t.Skipf("Skipping test: could not open test document: %v", err)
-	}
-	defer doc.Close()
+	// Test with sample document
+	t.Run("sample document", func(t *testing.T) {
+		doc, err := OpenWordDocument("testdata/sample.docx")
+		if err != nil {
+			t.Skipf("Skipping test: could not open test document: %v", err)
+		}
+		defer doc.Close()
 
-	tests := []struct {
-		name     string
-		wantText []string // Expected paragraphs
-	}{
-		{
-			name: "extract all text",
-			wantText: []string{
-				"This is a sample document",
-				"Second paragraph with some text",
-				"Third paragraph",
-			},
-		},
-	}
+		wantText := []string{
+			"This is a sample document",
+			"Second paragraph with some text",
+			"Third paragraph",
+		}
 
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			paragraphs := doc.GetText()
-			
-			if len(paragraphs) != len(tt.wantText) {
-				t.Errorf("GetText() returned %d paragraphs, want %d", len(paragraphs), len(tt.wantText))
-				return
+		paragraphs := doc.GetText()
+		
+		if len(paragraphs) != len(wantText) {
+			t.Errorf("GetText() returned %d paragraphs, want %d", len(paragraphs), len(wantText))
+			return
+		}
+		
+		for i, para := range paragraphs {
+			if para != wantText[i] {
+				t.Errorf("GetText() paragraph[%d] = %q, want %q", i, para, wantText[i])
 			}
-			
-			for i, para := range paragraphs {
-				if para != tt.wantText[i] {
-					t.Errorf("GetText() paragraph[%d] = %q, want %q", i, para, tt.wantText[i])
-				}
+		}
+	})
+
+	// Test with empty document
+	t.Run("empty document", func(t *testing.T) {
+		doc, err := OpenWordDocument("testdata/empty.docx")
+		if err != nil {
+			t.Skipf("Skipping test: could not open empty document: %v", err)
+		}
+		defer doc.Close()
+
+		paragraphs := doc.GetText()
+		
+		if len(paragraphs) != 0 {
+			t.Errorf("GetText() returned %d paragraphs for empty doc, want 0", len(paragraphs))
+		}
+	})
+
+	// Test with unicode document
+	t.Run("unicode document", func(t *testing.T) {
+		doc, err := OpenWordDocument("testdata/unicode.docx")
+		if err != nil {
+			t.Skipf("Skipping test: could not open unicode document: %v", err)
+		}
+		defer doc.Close()
+
+		wantText := []string{
+			"Hello, 世界! 👋",
+			"한글 텍스트 테스트",
+			"Café naïve fiancé",
+			"Emoji: 😃🚀🌟",
+		}
+
+		paragraphs := doc.GetText()
+		
+		if len(paragraphs) != len(wantText) {
+			t.Errorf("GetText() returned %d paragraphs, want %d", len(paragraphs), len(wantText))
+			return
+		}
+		
+		for i, para := range paragraphs {
+			if para != wantText[i] {
+				t.Errorf("GetText() paragraph[%d] = %q, want %q", i, para, wantText[i])
 			}
-		})
-	}
+		}
+	})
 }
 
 func TestWordDocument_ReplaceText(t *testing.T) {
@@ -157,6 +196,63 @@ func TestWordDocument_ReplaceText(t *testing.T) {
 			wantErr: false, // Should succeed but make no changes
 			verify: func(t *testing.T, doc *WordDocument) {
 				// Original text should remain unchanged
+			},
+		},
+		{
+			name:    "XML special characters - prevent injection",
+			old:     "sample",
+			new:     "<w:t>INJECTED</w:t>",
+			wantErr: false,
+			verify: func(t *testing.T, doc *WordDocument) {
+				text := doc.GetText()
+				for _, para := range text {
+					// The XML tags should be escaped, not interpreted
+					if contains(para, "INJECTED") && !contains(para, "<w:t>") {
+						t.Errorf("ReplaceText() failed: XML injection not prevented")
+					}
+					if contains(para, "&lt;w:t&gt;INJECTED&lt;/w:t&gt;") {
+						// This is expected - XML should be escaped
+						return
+					}
+				}
+			},
+		},
+		{
+			name:    "replace with ampersand",
+			old:     "sample",
+			new:     "R&D Department",
+			wantErr: false,
+			verify: func(t *testing.T, doc *WordDocument) {
+				text := doc.GetText()
+				found := false
+				for _, para := range text {
+					if contains(para, "R&D Department") || contains(para, "R&amp;D Department") {
+						found = true
+						break
+					}
+				}
+				if !found {
+					t.Errorf("ReplaceText() failed: ampersand not properly handled")
+				}
+			},
+		},
+		{
+			name:    "replace with quotes",
+			old:     "sample",
+			new:     `"quoted" text`,
+			wantErr: false,
+			verify: func(t *testing.T, doc *WordDocument) {
+				text := doc.GetText()
+				found := false
+				for _, para := range text {
+					if contains(para, `"quoted" text`) || contains(para, `&quot;quoted&quot; text`) {
+						found = true
+						break
+					}
+				}
+				if !found {
+					t.Errorf("ReplaceText() failed: quotes not properly handled")
+				}
 			},
 		},
 	}

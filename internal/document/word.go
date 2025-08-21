@@ -6,6 +6,7 @@ import (
 	"encoding/xml"
 	"errors"
 	"fmt"
+	"html"
 	"io"
 	"os"
 	"path/filepath"
@@ -130,7 +131,9 @@ func (w *WordDocument) GetText() []string {
 		var paraText strings.Builder
 		for _, match := range matches {
 			if len(match) > 1 {
-				paraText.WriteString(match[1])
+				// Unescape HTML entities to get the original text
+				unescaped := html.UnescapeString(match[1])
+				paraText.WriteString(unescaped)
 			}
 		}
 		if text := paraText.String(); text != "" {
@@ -139,6 +142,13 @@ func (w *WordDocument) GetText() []string {
 	}
 	
 	return paragraphs
+}
+
+// escapeXMLString escapes special XML characters to prevent XML injection
+func escapeXMLString(s string) string {
+	var buf bytes.Buffer
+	xml.EscapeText(&buf, []byte(s))
+	return buf.String()
 }
 
 // ReplaceText replaces all occurrences of old text with new text
@@ -150,6 +160,9 @@ func (w *WordDocument) ReplaceText(old, new string) error {
 	if old == "" {
 		return errors.New("old text cannot be empty")
 	}
+	
+	// Escape the new text to prevent XML injection
+	newEscaped := escapeXMLString(new)
 	
 	// Replace in raw XML
 	// We need to be careful to only replace text content, not XML tags
@@ -165,7 +178,8 @@ func (w *WordDocument) ReplaceText(old, new string) error {
 			textContent := submatches[2]
 			if strings.Contains(textContent, old) {
 				replaced = true
-				newContent := strings.ReplaceAll(textContent, old, new)
+				// Note: old text is not escaped as we're searching for it as-is in the document
+				newContent := strings.ReplaceAll(textContent, old, newEscaped)
 				return submatches[1] + newContent + submatches[3]
 			}
 		}
