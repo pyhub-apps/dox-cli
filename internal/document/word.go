@@ -111,7 +111,18 @@ func OpenWordDocument(path string) (*WordDocument, error) {
 }
 
 // GetText extracts all text content from the document
-func (w *WordDocument) GetText() []string {
+// GetText extracts all text from the Word document
+func (w *WordDocument) GetText() (string, error) {
+	if w.closed {
+		return "", fmt.Errorf("document is closed")
+	}
+	
+	paragraphs := w.GetTextParagraphs()
+	return strings.Join(paragraphs, "\n"), nil
+}
+
+// GetTextParagraphs returns text content as separate paragraphs
+func (w *WordDocument) GetTextParagraphs() []string {
 	if w.closed {
 		return nil
 	}
