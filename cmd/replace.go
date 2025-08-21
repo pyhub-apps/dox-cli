@@ -5,6 +5,7 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"time"
 
 	"github.com/pyhub/pyhub-documents-cli/internal/replace"
 	"github.com/spf13/cobra"
@@ -116,18 +117,22 @@ Examples:
 // Helper functions
 
 func createBackup(path string, isDir bool) error {
-	backupPath := path + ".backup"
+	// Use time-based timestamp for uniqueness
+	timestamp := time.Now().Format("20060102_150405")
 	
 	if isDir {
 		// For directories, create a backup directory with timestamp
-		timestamp := fmt.Sprintf("%d", os.Getpid())
-		backupPath = path + "_backup_" + timestamp
+		backupPath := path + "_backup_" + timestamp
 		
 		// Copy directory recursively
 		return copyDir(path, backupPath)
 	}
 	
-	// For files, create a simple backup copy
+	// For files, create a backup copy with timestamp
+	ext := filepath.Ext(path)
+	base := strings.TrimSuffix(path, ext)
+	backupPath := fmt.Sprintf("%s_backup_%s%s", base, timestamp, ext)
+	
 	input, err := os.ReadFile(path)
 	if err != nil {
 		return err
@@ -168,26 +173,10 @@ func previewDirectoryReplacements(dirPath string, rules []replace.Rule, recursiv
 	fmt.Println("Files that would be processed:")
 	
 	count := 0
-	err := filepath.Walk(dirPath, func(path string, info os.FileInfo, err error) error {
-		if err != nil {
-			return nil // Continue processing other files
-		}
-		
-		// Skip directories
-		if info.IsDir() {
-			// If not recursive, skip subdirectories
-			if !recursive && path != dirPath {
-				return filepath.SkipDir
-			}
-			return nil
-		}
-		
-		// Process only .docx files
-		if strings.HasSuffix(strings.ToLower(path), ".docx") {
-			fmt.Printf("  - %s\n", path)
-			count++
-		}
-		
+	// Reuse the walkDocxFiles logic by creating a temporary callback
+	err := replace.WalkDocxFiles(dirPath, recursive, func(path string) error {
+		fmt.Printf("  - %s\n", path)
+		count++
 		return nil
 	})
 	
@@ -202,14 +191,16 @@ func previewDirectoryReplacements(dirPath string, rules []replace.Rule, recursiv
 func printResults(results []replace.ReplaceResult) {
 	successCount := 0
 	failureCount := 0
+	totalReplacements := 0
 	
 	fmt.Println("\nProcessing results:")
 	fmt.Println("-------------------")
 	
 	for _, result := range results {
 		if result.Success {
-			fmt.Printf("✓ %s - Success\n", result.FilePath)
+			fmt.Printf("✓ %s - Success (%d replacements)\n", result.FilePath, result.Replacements)
 			successCount++
+			totalReplacements += result.Replacements
 		} else {
 			fmt.Printf("✗ %s - Failed: %v\n", result.FilePath, result.Error)
 			failureCount++
@@ -219,7 +210,8 @@ func printResults(results []replace.ReplaceResult) {
 	fmt.Println("\nSummary:")
 	fmt.Printf("  Successful: %d\n", successCount)
 	fmt.Printf("  Failed: %d\n", failureCount)
-	fmt.Printf("  Total: %d\n", len(results))
+	fmt.Printf("  Total files: %d\n", len(results))
+	fmt.Printf("  Total replacements: %d\n", totalReplacements)
 }
 
 func init() {

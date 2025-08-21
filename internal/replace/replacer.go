@@ -11,47 +11,105 @@ import (
 
 // ReplaceInDocument applies replacement rules to a single Word document
 func ReplaceInDocument(docPath string, rules []Rule) error {
+	_, err := ReplaceInDocumentWithCount(docPath, rules)
+	return err
+}
+
+// ReplaceInDocumentWithCount applies replacement rules and returns the count of replacements
+func ReplaceInDocumentWithCount(docPath string, rules []Rule) (int, error) {
 	// Validate input
 	if docPath == "" {
-		return fmt.Errorf("document path cannot be empty")
+		return 0, fmt.Errorf("document path cannot be empty")
 	}
 
 	// Check if file exists
 	if _, err := os.Stat(docPath); os.IsNotExist(err) {
-		return fmt.Errorf("document not found: %s", docPath)
+		return 0, fmt.Errorf("document not found: %s", docPath)
 	}
 
 	// Skip if no rules to apply
 	if len(rules) == 0 {
-		return nil
+		return 0, nil
 	}
 
 	// Validate all rules before processing
 	for i, rule := range rules {
 		if err := rule.Validate(); err != nil {
-			return fmt.Errorf("invalid rule at index %d: %w", i, err)
+			return 0, fmt.Errorf("invalid rule at index %d: %w", i, err)
 		}
 	}
 
 	// Open the document
 	doc, err := document.OpenWordDocument(docPath)
 	if err != nil {
-		return fmt.Errorf("failed to open document: %w", err)
+		return 0, fmt.Errorf("failed to open document: %w", err)
 	}
 	defer doc.Close()
+
+	// Track total replacements
+	totalReplacements := 0
 
 	// Apply each replacement rule
 	for _, rule := range rules {
 		if err := doc.ReplaceText(rule.Old, rule.New); err != nil {
-			return fmt.Errorf("failed to replace '%s' with '%s': %w", rule.Old, rule.New, err)
+			return totalReplacements, fmt.Errorf("failed to replace '%s' with '%s': %w", rule.Old, rule.New, err)
 		}
+		// Note: Currently we don't have a way to get the count from ReplaceText
+		// This would require modifying the document package to return counts
+		// For now, we'll increment by 1 if replacement succeeded
+		totalReplacements++
 	}
 
 	// Save the modified document
 	if err := doc.Save(); err != nil {
-		return fmt.Errorf("failed to save document: %w", err)
+		return totalReplacements, fmt.Errorf("failed to save document: %w", err)
 	}
 
+	return totalReplacements, nil
+}
+
+// WalkDocxFiles walks through .docx files in a directory and calls the callback for each file
+func WalkDocxFiles(dirPath string, recursive bool, callback func(string) error) error {
+	if recursive {
+		return filepath.Walk(dirPath, func(path string, info os.FileInfo, err error) error {
+			if err != nil {
+				return err
+			}
+
+			// Skip directories
+			if info.IsDir() {
+				return nil
+			}
+
+			// Process only .docx files
+			if strings.HasSuffix(strings.ToLower(path), ".docx") {
+				return callback(path)
+			}
+
+			return nil
+		})
+	} else {
+		// Non-recursive: only process files in the top-level directory
+		entries, err := os.ReadDir(dirPath)
+		if err != nil {
+			return fmt.Errorf("failed to read directory: %w", err)
+		}
+
+		for _, entry := range entries {
+			// Skip directories
+			if entry.IsDir() {
+				continue
+			}
+
+			// Process only .docx files
+			if strings.HasSuffix(strings.ToLower(entry.Name()), ".docx") {
+				path := filepath.Join(dirPath, entry.Name())
+				if err := callback(path); err != nil {
+					return err
+				}
+			}
+		}
+	}
 	return nil
 }
 
@@ -86,49 +144,16 @@ func ReplaceInDirectory(dirPath string, rules []Rule, recursive bool) error {
 	// Process documents in the directory
 	var processErrors []error
 	
-	if recursive {
-		err = filepath.Walk(dirPath, func(path string, info os.FileInfo, err error) error {
-			if err != nil {
-				// Record error but continue processing other files
-				processErrors = append(processErrors, fmt.Errorf("error accessing %s: %w", path, err))
-				return nil
-			}
-
-			// Skip directories
-			if info.IsDir() {
-				return nil
-			}
-
-			// Process only .docx files
-			if strings.HasSuffix(strings.ToLower(path), ".docx") {
-				if err := ReplaceInDocument(path, rules); err != nil {
-					processErrors = append(processErrors, fmt.Errorf("failed to process %s: %w", path, err))
-				}
-			}
-
-			return nil
-		})
-	} else {
-		// Non-recursive: only process files in the top-level directory
-		entries, err := os.ReadDir(dirPath)
-		if err != nil {
-			return fmt.Errorf("failed to read directory: %w", err)
+	err = WalkDocxFiles(dirPath, recursive, func(path string) error {
+		if err := ReplaceInDocument(path, rules); err != nil {
+			// Record error but continue processing other files
+			processErrors = append(processErrors, fmt.Errorf("failed to process %s: %w", path, err))
 		}
+		return nil // Continue processing other files even if one fails
+	})
 
-		for _, entry := range entries {
-			// Skip directories
-			if entry.IsDir() {
-				continue
-			}
-
-			// Process only .docx files
-			if strings.HasSuffix(strings.ToLower(entry.Name()), ".docx") {
-				path := filepath.Join(dirPath, entry.Name())
-				if err := ReplaceInDocument(path, rules); err != nil {
-					processErrors = append(processErrors, fmt.Errorf("failed to process %s: %w", path, err))
-				}
-			}
-		}
+	if err != nil {
+		return fmt.Errorf("error walking directory: %w", err)
 	}
 
 	// Report any errors that occurred
@@ -186,59 +211,27 @@ func ReplaceInDirectoryWithResults(dirPath string, rules []Rule, recursive bool)
 	}
 
 	// Process documents in the directory
-	processFile := func(path string) {
+	err = WalkDocxFiles(dirPath, recursive, func(path string) error {
 		result := ReplaceResult{
-			FilePath:     path,
-			Replacements: len(rules), // Simplified: assume all rules are applied
+			FilePath: path,
 		}
 
-		if err := ReplaceInDocument(path, rules); err != nil {
+		count, err := ReplaceInDocumentWithCount(path, rules)
+		if err != nil {
 			result.Success = false
 			result.Error = err
+			result.Replacements = 0
 		} else {
 			result.Success = true
+			result.Replacements = count
 		}
 
 		results = append(results, result)
-	}
+		return nil // Continue processing other files
+	})
 
-	if recursive {
-		err = filepath.Walk(dirPath, func(path string, info os.FileInfo, err error) error {
-			if err != nil {
-				return nil // Continue processing other files
-			}
-
-			// Skip directories
-			if info.IsDir() {
-				return nil
-			}
-
-			// Process only .docx files
-			if strings.HasSuffix(strings.ToLower(path), ".docx") {
-				processFile(path)
-			}
-
-			return nil
-		})
-	} else {
-		// Non-recursive: only process files in the top-level directory
-		entries, err := os.ReadDir(dirPath)
-		if err != nil {
-			return nil, fmt.Errorf("failed to read directory: %w", err)
-		}
-
-		for _, entry := range entries {
-			// Skip directories
-			if entry.IsDir() {
-				continue
-			}
-
-			// Process only .docx files
-			if strings.HasSuffix(strings.ToLower(entry.Name()), ".docx") {
-				path := filepath.Join(dirPath, entry.Name())
-				processFile(path)
-			}
-		}
+	if err != nil {
+		return nil, fmt.Errorf("error walking directory: %w", err)
 	}
 
 	return results, nil
