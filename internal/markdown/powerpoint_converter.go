@@ -5,6 +5,11 @@ import (
 )
 
 // PowerPointConverter converts markdown to PowerPoint presentation
+// Conversion rules:
+// - H1 headers create new slides
+// - H2 headers become slide titles (if first in section) or bold content
+// - H3-H6 headers become bold content within slides
+// - Lists, paragraphs, code blocks, and quotes are preserved as slide content
 type PowerPointConverter struct {
 	builder *PowerPointBuilder
 }
@@ -110,51 +115,56 @@ func (p *PowerPointConverter) convertSectionToSlide(section Section) {
 }
 
 // convertBlocksToSlides converts blocks to slides
+// H2 headers become content within the current slide, not new slides
 func (p *PowerPointConverter) convertBlocksToSlides(blocks []Block) {
 	if len(blocks) == 0 {
 		return
 	}
 	
 	slide := &Slide{}
+	hasContent := false
 	
 	for _, block := range blocks {
 		switch block.Type {
 		case BlockHeading:
-			// Start a new slide if we have content
-			if slide.Title != "" || len(slide.Content) > 0 || len(slide.Bullets) > 0 {
-				p.builder.AddContentSlide(slide)
-				slide = &Slide{}
-			}
-			
-			if block.Level <= 2 {
-				slide.Title = block.Content
-			} else {
+			// H2 and below become content, not new slides
+			if block.Level == 2 {
+				// H2 becomes bold content
+				slide.Content = append(slide.Content, fmt.Sprintf("**%s**", block.Content))
+			} else if block.Level > 2 {
+				// H3 and below become regular bold content
 				slide.Content = append(slide.Content, fmt.Sprintf("**%s**", block.Content))
 			}
+			hasContent = true
 			
 		case BlockParagraph:
 			slide.Content = append(slide.Content, block.Content)
+			hasContent = true
 			
 		case BlockList:
 			for _, item := range block.Items {
 				slide.Bullets = append(slide.Bullets, item)
 			}
+			hasContent = true
 			
 		case BlockOrderedList:
 			for i, item := range block.Items {
 				slide.Bullets = append(slide.Bullets, fmt.Sprintf("%d. %s", i+1, item))
 			}
+			hasContent = true
 			
 		case BlockCodeBlock:
 			slide.Content = append(slide.Content, fmt.Sprintf("```\n%s\n```", block.Content))
+			hasContent = true
 			
 		case BlockQuote:
 			slide.Content = append(slide.Content, fmt.Sprintf("> %s", block.Content))
+			hasContent = true
 		}
 	}
 	
-	// Add the last slide if it has content
-	if slide.Title != "" || len(slide.Content) > 0 || len(slide.Bullets) > 0 {
+	// Add the slide if it has any content
+	if hasContent {
 		p.builder.AddContentSlide(slide)
 	}
 }

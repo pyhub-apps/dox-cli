@@ -74,9 +74,10 @@ pyhub-documents-cli create --from content.md --template company.docx --output fi
 ```
 
 **Markdown to PowerPoint Conversion:**
-- H1 headers (`#`) become new slides
-- H2-H6 headers become content within slides
-- Lists, paragraphs, and code blocks are preserved
+- H1 headers (`#`) create new slides
+- H2 headers (`##`) become slide titles when first in a section, otherwise bold content
+- H3-H6 headers become bold content within slides
+- Lists, paragraphs, code blocks, and quotes are preserved as slide content
 
 **Markdown to Word Conversion:**
 - All Markdown elements are converted to Word formatting
