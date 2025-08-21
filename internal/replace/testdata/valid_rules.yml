@@ -1,0 +1,8 @@
+# Test replacement rules
+- old: "test1"
+  new: "replacement1"
+- old: "test2"
+  new: "replacement2"
+# This is a comment
+- old: "version 1.0"
+  new: "version 2.0"
