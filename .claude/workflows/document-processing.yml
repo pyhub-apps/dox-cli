@@ -1,0 +1,203 @@
+# Document Processing Workflow
+# Specialized workflow for document manipulation features
+
+workflow:
+  name: "Document Processing Feature"
+  description: "Implementing document format handling, conversion, and manipulation capabilities"
+
+phases:
+  1_format_analysis:
+    lead: DocProcessor
+    duration: "1-2 hours"
+    activities:
+      - Analyze document format requirements
+      - Research library capabilities
+      - Identify format limitations
+      - Plan processing strategy
+    outputs:
+      - Format specification analysis
+      - Library evaluation report
+      - Processing approach document
+  
+  2_api_design:
+    lead: LibraryDesigner
+    consults: [DocProcessor, CLIArchitect]
+    duration: "1-2 hours"
+    activities:
+      - Design public interfaces
+      - Define data structures
+      - Plan error handling
+      - Create API documentation
+    outputs:
+      - Interface definitions
+      - Type specifications
+      - API documentation draft
+  
+  3_implementation:
+    lead: GoMaster
+    supports: [DocProcessor]
+    duration: "4-8 hours"
+    activities:
+      - Implement document handlers
+      - Create format converters
+      - Handle edge cases
+      - Optimize performance
+    outputs:
+      - Document processing code
+      - Format handlers
+      - Conversion utilities
+  
+  4_integration:
+    lead: CLIArchitect
+    supports: [GoMaster]
+    duration: "2-3 hours"
+    activities:
+      - Integrate with CLI commands
+      - Add progress indicators
+      - Implement batch processing
+      - Create user feedback
+    outputs:
+      - CLI integration
+      - Progress reporting
+      - Batch processing support
+  
+  5_testing:
+    lead: TestGuardian
+    supports: [DocProcessor]
+    duration: "3-4 hours"
+    activities:
+      - Test with real documents
+      - Verify format preservation
+      - Check edge cases
+      - Test batch operations
+    outputs:
+      - Document test suite
+      - Sample test documents
+      - Performance benchmarks
+
+triggers:
+  commands:
+    - /implement create
+    - /implement replace
+    - /implement convert
+  
+  keywords:
+    - "document processing"
+    - "Word manipulation"
+    - "PowerPoint handling"
+    - "template processing"
+    - "batch replacement"
+
+special_considerations:
+  format_preservation:
+    priority: "Critical"
+    aspects:
+      - Maintain formatting
+      - Preserve styles
+      - Keep metadata
+      - Retain relationships
+    validation:
+      - Visual comparison
+      - Structure verification
+      - Round-trip testing
+  
+  performance:
+    targets:
+      single_document: "< 2 seconds"
+      batch_100_docs: "< 30 seconds"
+      memory_usage: "< 100MB"
+    optimization:
+      - Stream large files
+      - Parallel processing
+      - Efficient XML parsing
+      - Resource pooling
+  
+  compatibility:
+    requirements:
+      - Office 2007+ support
+      - LibreOffice compatibility
+      - Unicode handling
+      - Multi-language support
+    testing:
+      - Multiple Office versions
+      - Different locales
+      - Various document sizes
+      - Complex formatting
+
+library_evaluation:
+  criteria:
+    functionality:
+      - Feature completeness
+      - Format support
+      - API design
+      - Documentation quality
+    
+    reliability:
+      - Maintenance status
+      - Issue resolution
+      - Community size
+      - Test coverage
+    
+    performance:
+      - Processing speed
+      - Memory efficiency
+      - Scalability
+      - Concurrency support
+    
+    licensing:
+      - Open source requirement
+      - License compatibility
+      - Commercial usage
+      - Attribution needs
+
+test_scenarios:
+  basic_operations:
+    - Open and close documents
+    - Simple text replacement
+    - Save with new name
+    - Format detection
+  
+  advanced_operations:
+    - Template processing
+    - Batch operations
+    - Complex replacements
+    - Style preservation
+  
+  edge_cases:
+    - Corrupted documents
+    - Huge files (>100MB)
+    - Protected documents
+    - Unusual formats
+  
+  stress_testing:
+    - Concurrent processing
+    - Memory limits
+    - Disk space constraints
+    - Network storage
+
+quality_gates:
+  format_support:
+    - Correctly opens target formats
+    - Preserves document structure
+    - Maintains visual fidelity
+    - Handles metadata properly
+  
+  reliability:
+    - No data loss
+    - Graceful error handling
+    - Consistent results
+    - Recovery capabilities
+  
+  performance:
+    - Meets speed targets
+    - Acceptable memory usage
+    - Scales with load
+    - Responsive UI
+
+success_criteria:
+  - All target formats supported
+  - Zero formatting loss for text operations
+  - Performance targets met
+  - Comprehensive test coverage
+  - Clear error messages
+  - Well-documented limitations

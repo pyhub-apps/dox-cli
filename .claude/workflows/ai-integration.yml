@@ -1,0 +1,276 @@
+# AI Integration Workflow
+# Workflow for integrating OpenAI API and AI-powered features
+
+workflow:
+  name: "AI Integration"
+  description: "Implementing AI-powered content generation and processing features"
+
+phases:
+  1_requirements:
+    lead: AIIntegrator
+    consults: [CLIArchitect]
+    duration: "1-2 hours"
+    activities:
+      - Define generation types
+      - Design prompt templates
+      - Plan API integration
+      - Estimate token usage
+    outputs:
+      - AI feature specification
+      - Prompt template library
+      - Cost estimation model
+  
+  2_api_design:
+    lead: LibraryDesigner
+    consults: [AIIntegrator]
+    duration: "1-2 hours"
+    activities:
+      - Design generation interfaces
+      - Define configuration options
+      - Plan error handling
+      - Create abstraction layer
+    outputs:
+      - Generator interface
+      - Configuration structures
+      - Error types
+  
+  3_implementation:
+    lead: GoMaster
+    supports: [AIIntegrator]
+    duration: "4-6 hours"
+    activities:
+      - Implement OpenAI client
+      - Create prompt management
+      - Add retry logic
+      - Implement caching
+    outputs:
+      - OpenAI integration
+      - Prompt templates
+      - Response processing
+  
+  4_cli_integration:
+    lead: CLIArchitect
+    supports: [AIIntegrator]
+    duration: "2-3 hours"
+    activities:
+      - Design generate command
+      - Add configuration options
+      - Implement streaming output
+      - Create progress feedback
+    outputs:
+      - Generate command
+      - Configuration handling
+      - User feedback system
+  
+  5_optimization:
+    lead: AIIntegrator
+    supports: [GoMaster]
+    duration: "2-3 hours"
+    activities:
+      - Optimize token usage
+      - Implement caching strategy
+      - Add cost tracking
+      - Tune parameters
+    outputs:
+      - Optimized prompts
+      - Caching system
+      - Cost monitoring
+  
+  6_testing:
+    lead: TestGuardian
+    supports: [AIIntegrator]
+    duration: "2-3 hours"
+    activities:
+      - Mock API responses
+      - Test error handling
+      - Verify retry logic
+      - Check rate limiting
+    outputs:
+      - API test suite
+      - Mock responses
+      - Integration tests
+
+triggers:
+  commands:
+    - /implement generate
+    - /implement ai
+    - /integrate openai
+  
+  keywords:
+    - "AI generation"
+    - "OpenAI integration"
+    - "content generation"
+    - "prompt engineering"
+
+api_integration:
+  authentication:
+    methods:
+      - Environment variable (primary)
+      - Config file (secondary)
+      - CLI flag (CI/CD)
+    security:
+      - Never log API keys
+      - Secure storage
+      - Rotation support
+  
+  models:
+    selection_criteria:
+      gpt-3.5-turbo:
+        use_for: "Simple content, drafts"
+        cost: "Low"
+        speed: "Fast"
+        quality: "Good"
+      
+      gpt-4:
+        use_for: "Complex content, analysis"
+        cost: "High"
+        speed: "Slower"
+        quality: "Excellent"
+      
+      gpt-4-turbo:
+        use_for: "Long context, latest features"
+        cost: "Medium-High"
+        speed: "Medium"
+        quality: "Excellent"
+  
+  rate_limiting:
+    strategy:
+      - Exponential backoff
+      - Request queuing
+      - Parallel request limit
+      - User-based quotas
+
+prompt_engineering:
+  template_categories:
+    content_generation:
+      blog_post:
+        system: "Technical writer specializing in {domain}"
+        temperature: 0.7
+        max_tokens: 2000
+      
+      report:
+        system: "Business analyst creating professional reports"
+        temperature: 0.5
+        max_tokens: 3000
+      
+      summary:
+        system: "Expert at concise summarization"
+        temperature: 0.3
+        max_tokens: 500
+    
+    document_processing:
+      translation:
+        system: "Professional translator fluent in {languages}"
+        temperature: 0.3
+        
+      enhancement:
+        system: "Editor improving clarity and engagement"
+        temperature: 0.5
+      
+      formatting:
+        system: "Document formatting specialist"
+        temperature: 0.2
+  
+  optimization:
+    - Use few-shot examples
+    - Implement chain-of-thought
+    - Add output format instructions
+    - Include quality criteria
+
+cost_management:
+  tracking:
+    metrics:
+      - Tokens per request
+      - Cost per operation
+      - Daily/monthly spend
+      - Model usage distribution
+    
+    reporting:
+      - Real-time monitoring
+      - Usage alerts
+      - Cost reports
+      - Optimization suggestions
+  
+  optimization:
+    strategies:
+      - Cache identical requests
+      - Use cheaper models first
+      - Implement token limits
+      - Batch similar requests
+    
+    fallbacks:
+      - Switch to cheaper model
+      - Use cached responses
+      - Reduce max tokens
+      - Queue non-urgent requests
+
+error_handling:
+  api_errors:
+    rate_limit:
+      action: "Exponential backoff"
+      max_retries: 3
+      notification: "Show wait time"
+    
+    quota_exceeded:
+      action: "Switch to cache/cheaper model"
+      notification: "Alert user"
+      
+    invalid_key:
+      action: "Clear error message"
+      help: "Setup instructions"
+    
+    timeout:
+      action: "Retry with backoff"
+      fallback: "Return partial result"
+
+testing_strategy:
+  unit_tests:
+    - Mock OpenAI client
+    - Test prompt generation
+    - Verify error handling
+    - Check retry logic
+  
+  integration_tests:
+    - Limited real API calls
+    - Test rate limiting
+    - Verify streaming
+    - Check cost tracking
+  
+  mock_responses:
+    - Realistic content
+    - Error conditions
+    - Streaming data
+    - Various model outputs
+
+quality_gates:
+  functionality:
+    - All generation types work
+    - Streaming implemented
+    - Error handling robust
+    - Configuration flexible
+  
+  performance:
+    - Response time < 5s
+    - Streaming starts < 1s
+    - Memory usage stable
+    - Concurrent requests handled
+  
+  reliability:
+    - Retry logic works
+    - Fallbacks implemented
+    - No data loss
+    - Graceful degradation
+  
+  cost_efficiency:
+    - Token usage optimized
+    - Caching effective
+    - Model selection appropriate
+    - Cost tracking accurate
+
+success_criteria:
+  - Seamless OpenAI integration
+  - All content types supported
+  - Cost-effective operation
+  - Robust error handling
+  - Clear user feedback
+  - Comprehensive testing
