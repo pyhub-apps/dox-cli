@@ -1,0 +1,36 @@
+title: "Q4 2024 Report"
+author: "John Doe"
+company: "TechCorp Inc."
+year: 2024
+quarter: "Q4"
+date: "2024-12-31"
+
+# Financial metrics
+revenue: "$5.2M"
+growth: "23%"
+profit: "$1.8M"
+
+# Achievements list
+achievements:
+  - "Launched new product line"
+  - "Expanded to 3 new markets"
+  - "Achieved 99.9% uptime"
+  - "Reduced operational costs by 15%"
+
+# Department data
+departments:
+  sales:
+    head: "Jane Smith"
+    employees: 45
+    target: "$4.5M"
+    actual: "$5.2M"
+  engineering:
+    head: "Bob Johnson"
+    employees: 120
+    projects: 15
+    completed: 12
+  marketing:
+    head: "Alice Brown"
+    employees: 30
+    campaigns: 8
+    roi: "320%"
