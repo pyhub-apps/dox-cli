@@ -1,0 +1,72 @@
+{
+  "cmd.root.short": "Document automation and AI-powered content generation CLI",
+  "cmd.root.long": "pyhub-documents-cli is a powerful CLI tool for document automation.\nIt automates document editing and content generation tasks.",
+  
+  "cmd.replace.short": "Replace text in documents using rules from a YAML file",
+  "cmd.replace.long": "Replace text in Word and PowerPoint documents based on rules defined in a YAML file.\nSupports batch processing of multiple files and directories.",
+  
+  "cmd.create.short": "Create documents from markdown files",
+  "cmd.create.long": "Create Word or PowerPoint documents from markdown files.\n\nSupports:\n  • Direct markdown to document conversion\n  • Template-based document generation\n  • Style and format preservation",
+  
+  "cmd.template.short": "Process documents using templates",
+  "cmd.template.long": "Process Word or PowerPoint documents using templates with placeholders.\n\nPlaceholders use the {{placeholder_name}} format and can be replaced with values\nprovided via command-line flags or from a YAML/JSON file.",
+  
+  "cmd.generate.short": "Generate content using AI (OpenAI)",
+  "cmd.generate.long": "Generate various types of content using OpenAI's language models.\n\nSupports blog posts, documentation, reports, and custom content types.",
+  
+  "cmd.version.short": "Print version information",
+  "cmd.version.long": "Print version information including version number, commit hash, and build date.",
+
+  "flag.rules": "YAML file containing replacement rules",
+  "flag.path": "Path to file or directory to process",
+  "flag.dryrun": "Show what would be changed without making actual changes",
+  "flag.backup": "Create backup before modifying files",
+  "flag.recursive": "Process subdirectories recursively",
+  "flag.from": "Input markdown file",
+  "flag.template": "Template document file",
+  "flag.output": "Output file path",
+  "flag.format": "Output format (docx|pptx, auto-detected from extension)",
+  "flag.force": "Overwrite existing output file",
+  "flag.values": "Values file (YAML or JSON)",
+  "flag.set": "Set individual values (format: key=value)",
+  "flag.type": "Content type to generate",
+  "flag.prompt": "Content generation prompt",
+  "flag.lang": "Display language (en|ko)",
+
+  "success.created": "✅ Successfully created {{.File}}",
+  "success.replaced": "✓ {{.File}} - Replacements: {{.Count}}",
+  "success.backup": "Backup created: {{.File}}",
+  "success.processed": "✅ Successfully processed {{.File}}",
+
+  "progress.converting": "Converting {{.Source}} to {{.Type}} document...",
+  "progress.processing": "Processing {{.Type}} template...",
+  "progress.rules": "Replacement rules to be applied:",
+  "progress.dryrun": "Files that would be processed:",
+
+  "warning.no_values": "Warning: The following placeholders have no values: {{.Placeholders}}",
+  "warning.template_not_impl": "Warning: Template support is not yet implemented, ignoring --template flag",
+  "warning.no_rules": "No replacement rules found in the file",
+
+  "error.file_not_found": "{{.Type}} file not found: {{.Path}}",
+  "error.file_exists": "Output file already exists: {{.Path}} (use --force to overwrite)",
+  "error.invalid_format": "Invalid {{.Type}} format: {{.Value}} (expected {{.Expected}})",
+  "error.invalid_set": "Invalid --set format: {{.Value}} (expected key=value)",
+  "error.unsupported": "Unsupported {{.Type}}: {{.Value}} (supported: {{.Supported}})",
+  "error.load_rules": "Failed to load rules: {{.Error}}",
+  "error.load_values": "Failed to load values from file: {{.Error}}",
+  "error.process": "Failed to process {{.Type}}: {{.Error}}",
+  "error.validate": "Failed to validate {{.Type}}: {{.Error}}",
+  "error.conversion": "Conversion failed: {{.Error}}",
+  "error.not_implemented": "{{.Feature}} not yet implemented ({{.Phase}})",
+  "error.parse_yaml": "Failed to parse YAML: {{.Error}}",
+  "error.parse_json": "Failed to parse JSON: {{.Error}}",
+  "error.parse_file": "Failed to parse file as YAML or JSON",
+  "error.create_backup": "Failed to create backup: {{.Error}}",
+  "error.access_path": "Failed to access target path: {{.Error}}",
+
+  "summary.total": "Total files: {{.Count}}",
+  "summary.success": "Successful: {{.Count}}",
+  "summary.failed": "Failed: {{.Count}}",
+  "summary.skipped": "Skipped: {{.Count}}",
+  "summary.results": "Processing results:"
+}

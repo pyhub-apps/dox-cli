@@ -12,6 +12,7 @@ Document automation and AI-powered content generation CLI tool for developers an
 - ✅ **Document Conversion**: Convert Markdown to Word (.docx) and PowerPoint (.pptx)
 - ✅ **Bulk Text Replacement**: Replace text across multiple Word and PowerPoint documents using YAML rules
 - ✅ **Template Processing**: Use Word/PowerPoint templates with placeholder replacement
+- 🌍 **Internationalization (i18n)**: English and Korean language support with automatic locale detection
 - 🤖 **AI Content Generation**: Generate content using OpenAI (Phase 2)
 - 🚀 **Cross-Platform**: Single binary with no dependencies
 
@@ -110,6 +111,47 @@ pyhub-documents-cli create --from content.md --template company.docx --output fi
 
 ```bash
 pyhub-documents-cli generate --type blog --prompt "Go best practices" --output blog.md
+```
+
+## 🌍 Internationalization (i18n)
+
+The CLI supports multiple languages with automatic locale detection from your system settings.
+
+### Supported Languages
+- 🇺🇸 English (en)
+- 🇰🇷 Korean (ko)
+
+### Language Selection
+The CLI automatically detects your system language from environment variables (`LANG`, `LC_ALL`). You can also explicitly set the language:
+
+```bash
+# Use Korean interface
+pyhub-documents-cli --lang ko replace --rules rules.yml --path ./docs
+
+# Use English interface
+pyhub-documents-cli --lang en create --from report.md --output report.docx
+
+# Auto-detect from system (default)
+pyhub-documents-cli replace --rules rules.yml --path ./docs
+```
+
+### System Language Detection Priority
+1. `--lang` flag (highest priority)
+2. `LANG` environment variable
+3. `LC_ALL` environment variable
+4. Default to English
+
+### Examples
+```bash
+# Korean system (LANG=ko_KR.UTF-8)
+$ pyhub-documents-cli create --from report.md --output report.docx
+report.md를 Word 문서로 변환 중...
+✅ report.docx 생성 완료
+
+# English system or with --lang en
+$ pyhub-documents-cli --lang en create --from report.md --output report.docx
+Converting report.md to Word document...
+✅ Successfully created report.docx
 ```
 
 ## 📚 Documentation

@@ -1,0 +1,72 @@
+{
+  "cmd.root.short": "문서 자동화 및 AI 기반 콘텐츠 생성 CLI",
+  "cmd.root.long": "pyhub-documents-cli는 강력한 문서 자동화 CLI 도구입니다.\n문서 편집 및 콘텐츠 생성 작업을 자동화합니다.",
+  
+  "cmd.replace.short": "YAML 파일의 규칙을 사용하여 문서의 텍스트 교체",
+  "cmd.replace.long": "YAML 파일에 정의된 규칙에 따라 Word 및 PowerPoint 문서의 텍스트를 교체합니다.\n여러 파일과 디렉토리의 일괄 처리를 지원합니다.",
+  
+  "cmd.create.short": "마크다운 파일에서 문서 생성",
+  "cmd.create.long": "마크다운 파일에서 Word 또는 PowerPoint 문서를 생성합니다.\n\n지원 기능:\n  • 마크다운을 문서로 직접 변환\n  • 템플릿 기반 문서 생성\n  • 스타일 및 형식 보존",
+  
+  "cmd.template.short": "템플릿을 사용하여 문서 처리",
+  "cmd.template.long": "플레이스홀더가 있는 템플릿을 사용하여 Word 또는 PowerPoint 문서를 처리합니다.\n\n플레이스홀더는 {{placeholder_name}} 형식을 사용하며\n명령줄 플래그 또는 YAML/JSON 파일에서 제공된 값으로 교체할 수 있습니다.",
+  
+  "cmd.generate.short": "AI(OpenAI)를 사용하여 콘텐츠 생성",
+  "cmd.generate.long": "OpenAI의 언어 모델을 사용하여 다양한 유형의 콘텐츠를 생성합니다.\n\n블로그 게시물, 문서, 보고서 및 사용자 정의 콘텐츠 유형을 지원합니다.",
+  
+  "cmd.version.short": "버전 정보 출력",
+  "cmd.version.long": "버전 번호, 커밋 해시 및 빌드 날짜를 포함한 버전 정보를 출력합니다.",
+
+  "flag.rules": "교체 규칙이 포함된 YAML 파일",
+  "flag.path": "처리할 파일 또는 디렉토리 경로",
+  "flag.dryrun": "실제 변경 없이 변경될 내용 표시",
+  "flag.backup": "파일 수정 전 백업 생성",
+  "flag.recursive": "하위 디렉토리를 재귀적으로 처리",
+  "flag.from": "입력 마크다운 파일",
+  "flag.template": "템플릿 문서 파일",
+  "flag.output": "출력 파일 경로",
+  "flag.format": "출력 형식 (docx|pptx, 확장자에서 자동 감지)",
+  "flag.force": "기존 출력 파일 덮어쓰기",
+  "flag.values": "값 파일 (YAML 또는 JSON)",
+  "flag.set": "개별 값 설정 (형식: key=value)",
+  "flag.type": "생성할 콘텐츠 유형",
+  "flag.prompt": "콘텐츠 생성 프롬프트",
+  "flag.lang": "표시 언어 (en|ko)",
+
+  "success.created": "✅ {{.File}} 생성 완료",
+  "success.replaced": "✓ {{.File}} - 교체: {{.Count}}건",
+  "success.backup": "백업 생성됨: {{.File}}",
+  "success.processed": "✅ {{.File}} 처리 완료",
+
+  "progress.converting": "{{.Source}}를 {{.Type}} 문서로 변환 중...",
+  "progress.processing": "{{.Type}} 템플릿 처리 중...",
+  "progress.rules": "적용될 교체 규칙:",
+  "progress.dryrun": "처리될 파일:",
+
+  "warning.no_values": "경고: 다음 플레이스홀더에 값이 없습니다: {{.Placeholders}}",
+  "warning.template_not_impl": "경고: 템플릿 지원이 아직 구현되지 않았습니다. --template 플래그를 무시합니다",
+  "warning.no_rules": "파일에서 교체 규칙을 찾을 수 없습니다",
+
+  "error.file_not_found": "{{.Type}} 파일을 찾을 수 없습니다: {{.Path}}",
+  "error.file_exists": "출력 파일이 이미 존재합니다: {{.Path}} (덮어쓰려면 --force 사용)",
+  "error.invalid_format": "잘못된 {{.Type}} 형식: {{.Value}} (예상: {{.Expected}})",
+  "error.invalid_set": "잘못된 --set 형식: {{.Value}} (예상: key=value)",
+  "error.unsupported": "지원되지 않는 {{.Type}}: {{.Value}} (지원: {{.Supported}})",
+  "error.load_rules": "규칙 로드 실패: {{.Error}}",
+  "error.load_values": "파일에서 값 로드 실패: {{.Error}}",
+  "error.process": "{{.Type}} 처리 실패: {{.Error}}",
+  "error.validate": "{{.Type}} 검증 실패: {{.Error}}",
+  "error.conversion": "변환 실패: {{.Error}}",
+  "error.not_implemented": "{{.Feature}}은(는) 아직 구현되지 않았습니다 ({{.Phase}})",
+  "error.parse_yaml": "YAML 파싱 실패: {{.Error}}",
+  "error.parse_json": "JSON 파싱 실패: {{.Error}}",
+  "error.parse_file": "파일을 YAML 또는 JSON으로 파싱할 수 없습니다",
+  "error.create_backup": "백업 생성 실패: {{.Error}}",
+  "error.access_path": "대상 경로 접근 실패: {{.Error}}",
+
+  "summary.total": "전체 파일: {{.Count}}개",
+  "summary.success": "성공: {{.Count}}개",
+  "summary.failed": "실패: {{.Count}}개",
+  "summary.skipped": "건너뜀: {{.Count}}개",
+  "summary.results": "처리 결과:"
+}

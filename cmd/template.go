@@ -7,6 +7,7 @@ import (
 	"path/filepath"
 	"strings"
 
+	"github.com/pyhub/pyhub-documents-cli/internal/i18n"
 	"github.com/pyhub/pyhub-documents-cli/internal/template"
 	"github.com/spf13/cobra"
 	"gopkg.in/yaml.v3"
@@ -60,18 +61,29 @@ func init() {
 
 	templateCmd.MarkFlagRequired("template")
 	templateCmd.MarkFlagRequired("output")
+	
+	// Update descriptions after i18n initialization
+	cobra.OnInitialize(func() {
+		templateCmd.Short = i18n.T(i18n.MsgCmdTemplateShort)
+		templateCmd.Long = i18n.T(i18n.MsgCmdTemplateLong)
+	})
 }
 
 func runTemplate(cmd *cobra.Command, args []string) error {
 	// Check if template file exists
 	if _, err := os.Stat(templatePath); os.IsNotExist(err) {
-		return fmt.Errorf("template file not found: %s", templatePath)
+		return fmt.Errorf(i18n.T(i18n.MsgErrorFileNotFound, map[string]interface{}{
+			"Type": "Template",
+			"Path": templatePath,
+		}))
 	}
 
 	// Check if output file exists and force flag is not set
 	if !templateForce {
 		if _, err := os.Stat(templateOut); err == nil {
-			return fmt.Errorf("output file already exists: %s (use --force to overwrite)", templateOut)
+			return fmt.Errorf(i18n.T(i18n.MsgErrorFileExists, map[string]interface{}{
+				"Path": templateOut,
+			}))
 		}
 	}
 
@@ -82,7 +94,9 @@ func runTemplate(cmd *cobra.Command, args []string) error {
 	if valuesFile != "" {
 		fileValues, err := loadValuesFromFile(valuesFile)
 		if err != nil {
-			return fmt.Errorf("failed to load values from file: %w", err)
+			return fmt.Errorf(i18n.T(i18n.MsgErrorLoadValues, map[string]interface{}{
+				"Error": err.Error(),
+			}))
 		}
 		// Merge file values
 		for k, v := range fileValues {
@@ -94,7 +108,9 @@ func runTemplate(cmd *cobra.Command, args []string) error {
 	for _, setValue := range setValues {
 		parts := strings.SplitN(setValue, "=", 2)
 		if len(parts) != 2 {
-			return fmt.Errorf("invalid --set format: %s (expected key=value)", setValue)
+			return fmt.Errorf(i18n.T(i18n.MsgErrorInvalidSet, map[string]interface{}{
+				"Value": setValue,
+			}))
 		}
 		key := strings.TrimSpace(parts[0])
 		value := strings.TrimSpace(parts[1])
@@ -117,17 +133,27 @@ func runTemplate(cmd *cobra.Command, args []string) error {
 		// Validate template
 		missing, err := processor.ValidateTemplate(templatePath, values)
 		if err != nil {
-			return fmt.Errorf("failed to validate template: %w", err)
+			return fmt.Errorf(i18n.T(i18n.MsgErrorValidate, map[string]interface{}{
+				"Type":  "template",
+				"Error": err.Error(),
+			}))
 		}
 		
 		if len(missing) > 0 {
-			cmd.PrintErrf("Warning: The following placeholders have no values: %v\n", missing)
+			cmd.PrintErrf(i18n.T(i18n.MsgWarningNoValues, map[string]interface{}{
+				"Placeholders": fmt.Sprintf("%v", missing),
+			}) + "\n")
 		}
 		
 		// Process template
-		cmd.Printf("Processing Word template...\n")
+		cmd.Printf(i18n.T(i18n.MsgProgressProcessing, map[string]interface{}{
+			"Type": "Word",
+		}) + "\n")
 		if err := processor.ProcessTemplate(templatePath, values, templateOut); err != nil {
-			return fmt.Errorf("failed to process template: %w", err)
+			return fmt.Errorf(i18n.T(i18n.MsgErrorProcess, map[string]interface{}{
+				"Type":  "template",
+				"Error": err.Error(),
+			}))
 		}
 		
 	case ".pptx":
@@ -136,24 +162,40 @@ func runTemplate(cmd *cobra.Command, args []string) error {
 		// Validate template
 		missing, err := processor.ValidateTemplate(templatePath, values)
 		if err != nil {
-			return fmt.Errorf("failed to validate template: %w", err)
+			return fmt.Errorf(i18n.T(i18n.MsgErrorValidate, map[string]interface{}{
+				"Type":  "template",
+				"Error": err.Error(),
+			}))
 		}
 		
 		if len(missing) > 0 {
-			cmd.PrintErrf("Warning: The following placeholders have no values: %v\n", missing)
+			cmd.PrintErrf(i18n.T(i18n.MsgWarningNoValues, map[string]interface{}{
+				"Placeholders": fmt.Sprintf("%v", missing),
+			}) + "\n")
 		}
 		
 		// Process template
-		cmd.Printf("Processing PowerPoint template...\n")
+		cmd.Printf(i18n.T(i18n.MsgProgressProcessing, map[string]interface{}{
+			"Type": "PowerPoint",
+		}) + "\n")
 		if err := processor.ProcessTemplate(templatePath, values, templateOut); err != nil {
-			return fmt.Errorf("failed to process template: %w", err)
+			return fmt.Errorf(i18n.T(i18n.MsgErrorProcess, map[string]interface{}{
+				"Type":  "template",
+				"Error": err.Error(),
+			}))
 		}
 		
 	default:
-		return fmt.Errorf("unsupported template format: %s (only .docx and .pptx are supported)", ext)
+		return fmt.Errorf(i18n.T(i18n.MsgErrorUnsupported, map[string]interface{}{
+			"Type":      "template format",
+			"Value":     ext,
+			"Supported": ".docx, .pptx",
+		}))
 	}
 
-	cmd.Printf("✅ Successfully created %s from template\n", templateOut)
+	cmd.Printf(i18n.T(i18n.MsgSuccessCreated, map[string]interface{}{
+		"File": templateOut,
+	}) + "\n")
 	return nil
 }
 
@@ -172,17 +214,21 @@ func loadValuesFromFile(path string) (map[string]interface{}, error) {
 	switch ext {
 	case ".yaml", ".yml":
 		if err := yaml.Unmarshal(data, &values); err != nil {
-			return nil, fmt.Errorf("failed to parse YAML: %w", err)
+			return nil, fmt.Errorf(i18n.T(i18n.MsgErrorParseYAML, map[string]interface{}{
+				"Error": err.Error(),
+			}))
 		}
 	case ".json":
 		if err := json.Unmarshal(data, &values); err != nil {
-			return nil, fmt.Errorf("failed to parse JSON: %w", err)
+			return nil, fmt.Errorf(i18n.T(i18n.MsgErrorParseJSON, map[string]interface{}{
+				"Error": err.Error(),
+			}))
 		}
 	default:
 		// Try YAML first, then JSON
 		if err := yaml.Unmarshal(data, &values); err != nil {
 			if err := json.Unmarshal(data, &values); err != nil {
-				return nil, fmt.Errorf("failed to parse file as YAML or JSON")
+				return nil, fmt.Errorf(i18n.T(i18n.MsgErrorParseFile))
 			}
 		}
 	}

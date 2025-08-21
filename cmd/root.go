@@ -3,15 +3,18 @@ package cmd
 import (
 	"fmt"
 	"os"
+	"path/filepath"
 
+	"github.com/pyhub/pyhub-documents-cli/internal/i18n"
 	"github.com/spf13/cobra"
 )
 
 var (
 	// Configuration flags
-	cfgFile string
-	verbose bool
-	quiet   bool
+	cfgFile  string
+	verbose  bool
+	quiet    bool
+	langFlag string
 )
 
 // rootCmd represents the base command when called without any subcommands
@@ -47,12 +50,13 @@ func Execute() {
 }
 
 func init() {
-	cobra.OnInitialize(initConfig)
+	cobra.OnInitialize(initConfig, initI18n)
 
 	// Global flags
 	rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is $HOME/.pyhub/config.yml)")
 	rootCmd.PersistentFlags().BoolVarP(&verbose, "verbose", "v", false, "verbose output")
 	rootCmd.PersistentFlags().BoolVarP(&quiet, "quiet", "q", false, "suppress non-error output")
+	rootCmd.PersistentFlags().StringVar(&langFlag, "lang", "", i18n.T(i18n.MsgFlagLang))
 
 	// Version template
 	rootCmd.SetVersionTemplate(fmt.Sprintf(`{{with .Name}}{{printf "%%s version information:\n" .}}{{end}}
@@ -66,4 +70,23 @@ func init() {
 func initConfig() {
 	// TODO: Implement configuration loading
 	// This will be implemented when we add the config package
+}
+
+// initI18n initializes the internationalization system
+func initI18n() {
+	// Try to load from external files first (for development)
+	execPath, _ := os.Executable()
+	localesDir := filepath.Join(filepath.Dir(execPath), "locales")
+	
+	if _, err := os.Stat(localesDir); err == nil {
+		// External locale files exist
+		i18n.InitWithFiles(localesDir, langFlag)
+	} else {
+		// Use embedded locale files
+		i18n.Init(langFlag)
+	}
+	
+	// Update command descriptions after i18n is initialized
+	rootCmd.Short = i18n.T(i18n.MsgCmdRootShort)
+	rootCmd.Long = i18n.T(i18n.MsgCmdRootLong)
 }

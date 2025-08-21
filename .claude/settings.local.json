@@ -13,7 +13,12 @@
       "Bash(git push:*)",
       "Bash(gh:*)",
       "Bash(go test:*)",
-      "Bash(go tool cover:*)"
+      "Bash(go tool cover:*)",
+      "Bash(echo $LANG)",
+      "Bash(echo $LC_ALL)",
+      "WebSearch",
+      "Bash(go run:*)",
+      "Bash(rm:*)"
     ],
     "deny": [],
     "ask": []
