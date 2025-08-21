@@ -9,7 +9,7 @@ import (
 	"github.com/pyhub/pyhub-documents-cli/internal/document"
 )
 
-// ReplaceInDocument applies replacement rules to a single Word document
+// ReplaceInDocument applies replacement rules to a single Word or PowerPoint document
 func ReplaceInDocument(docPath string, rules []Rule) error {
 	_, err := ReplaceInDocumentWithCount(docPath, rules)
 	return err
@@ -39,8 +39,19 @@ func ReplaceInDocumentWithCount(docPath string, rules []Rule) (int, error) {
 		}
 	}
 
-	// Open the document
-	doc, err := document.OpenWordDocument(docPath)
+	// Determine document type and open accordingly
+	lowerPath := strings.ToLower(docPath)
+	var doc document.Document
+	var err error
+	
+	if strings.HasSuffix(lowerPath, ".docx") {
+		doc, err = document.OpenWordDocument(docPath)
+	} else if strings.HasSuffix(lowerPath, ".pptx") {
+		doc, err = document.OpenPowerPointDocument(docPath)
+	} else {
+		return 0, fmt.Errorf("unsupported document type: %s (only .docx and .pptx are supported)", docPath)
+	}
+	
 	if err != nil {
 		return 0, fmt.Errorf("failed to open document: %w", err)
 	}
@@ -68,8 +79,20 @@ func ReplaceInDocumentWithCount(docPath string, rules []Rule) (int, error) {
 	return totalReplacements, nil
 }
 
+// WalkDocumentFiles walks through .docx and .pptx files in a directory and calls the callback for each file
+func WalkDocumentFiles(dirPath string, recursive bool, callback func(string) error) error {
+	// Keep WalkDocxFiles for backward compatibility
+	return walkDocumentFiles(dirPath, recursive, callback, ".docx", ".pptx")
+}
+
 // WalkDocxFiles walks through .docx files in a directory and calls the callback for each file
+// Deprecated: Use WalkDocumentFiles instead
 func WalkDocxFiles(dirPath string, recursive bool, callback func(string) error) error {
+	return walkDocumentFiles(dirPath, recursive, callback, ".docx")
+}
+
+// walkDocumentFiles is the internal implementation that accepts multiple extensions
+func walkDocumentFiles(dirPath string, recursive bool, callback func(string) error, extensions ...string) error {
 	if recursive {
 		return filepath.Walk(dirPath, func(path string, info os.FileInfo, err error) error {
 			if err != nil {
@@ -81,9 +104,12 @@ func WalkDocxFiles(dirPath string, recursive bool, callback func(string) error) 
 				return nil
 			}
 
-			// Process only .docx files
-			if strings.HasSuffix(strings.ToLower(path), ".docx") {
-				return callback(path)
+			// Process files with specified extensions
+			lowerPath := strings.ToLower(path)
+			for _, ext := range extensions {
+				if strings.HasSuffix(lowerPath, ext) {
+					return callback(path)
+				}
 			}
 
 			return nil
@@ -101,11 +127,15 @@ func WalkDocxFiles(dirPath string, recursive bool, callback func(string) error) 
 				continue
 			}
 
-			// Process only .docx files
-			if strings.HasSuffix(strings.ToLower(entry.Name()), ".docx") {
-				path := filepath.Join(dirPath, entry.Name())
-				if err := callback(path); err != nil {
-					return err
+			// Process files with specified extensions
+			lowerName := strings.ToLower(entry.Name())
+			for _, ext := range extensions {
+				if strings.HasSuffix(lowerName, ext) {
+					path := filepath.Join(dirPath, entry.Name())
+					if err := callback(path); err != nil {
+						return err
+					}
+					break
 				}
 			}
 		}
@@ -113,7 +143,7 @@ func WalkDocxFiles(dirPath string, recursive bool, callback func(string) error) 
 	return nil
 }
 
-// ReplaceInDirectory applies replacement rules to all Word documents in a directory
+// ReplaceInDirectory applies replacement rules to all Word and PowerPoint documents in a directory
 func ReplaceInDirectory(dirPath string, rules []Rule, recursive bool) error {
 	// Validate input
 	if dirPath == "" {
@@ -144,7 +174,7 @@ func ReplaceInDirectory(dirPath string, rules []Rule, recursive bool) error {
 	// Process documents in the directory
 	var processErrors []error
 	
-	err = WalkDocxFiles(dirPath, recursive, func(path string) error {
+	err = WalkDocumentFiles(dirPath, recursive, func(path string) error {
 		if err := ReplaceInDocument(path, rules); err != nil {
 			// Record error but continue processing other files
 			processErrors = append(processErrors, fmt.Errorf("failed to process %s: %w", path, err))
@@ -211,7 +241,7 @@ func ReplaceInDirectoryWithResults(dirPath string, rules []Rule, recursive bool)
 	}
 
 	// Process documents in the directory
-	err = WalkDocxFiles(dirPath, recursive, func(path string) error {
+	err = WalkDocumentFiles(dirPath, recursive, func(path string) error {
 		result := ReplaceResult{
 			FilePath: path,
 		}

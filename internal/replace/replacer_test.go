@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"strings"
 	"testing"
 
 	"github.com/pyhub/pyhub-documents-cli/internal/document"
@@ -40,9 +41,9 @@ func TestReplaceInDocument(t *testing.T) {
 				}
 				defer doc.Close()
 
-				text := doc.GetText()
+				text, _ := doc.GetText()
 				found := false
-				for _, para := range text {
+				for _, para := range strings.Split(text, "\n") {
 					if contains(para, "Version 2.0") {
 						found = true
 						break
@@ -77,8 +78,8 @@ func TestReplaceInDocument(t *testing.T) {
 				}
 				defer doc.Close()
 
-				text := doc.GetText()
-				allText := joinStrings(text, " ")
+				text, _ := doc.GetText()
+				allText := text
 				
 				// Check all replacements were made
 				if !contains(allText, "Version 2.0") {
@@ -129,8 +130,8 @@ func TestReplaceInDocument(t *testing.T) {
 				}
 				defer doc.Close()
 
-				text := doc.GetText()
-				if len(text) == 0 {
+				text, _ := doc.GetText()
+				if text == "" {
 					t.Error("Document content was lost")
 				}
 			},
@@ -193,8 +194,8 @@ func TestReplaceInDirectory(t *testing.T) {
 					}
 					defer doc.Close()
 
-					text := doc.GetText()
-					allText := joinStrings(text, " ")
+					text, _ := doc.GetText()
+					allText := text
 					if !contains(allText, "Version 2.0") {
 						t.Errorf("Replacement failed in doc%d", i)
 					}
@@ -322,8 +323,8 @@ func checkDocument(t *testing.T, path string, expectedText string) {
 	}
 	defer doc.Close()
 	
-	text := doc.GetText()
-	allText := joinStrings(text, " ")
+	text, _ := doc.GetText()
+	allText := text
 	
 	if !contains(allText, expectedText) {
 		t.Errorf("Expected text '%s' not found in %s", expectedText, path)

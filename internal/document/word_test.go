@@ -3,6 +3,7 @@ package document
 import (
 	"os"
 	"path/filepath"
+	"strings"
 	"testing"
 )
 
@@ -85,7 +86,11 @@ func TestWordDocument_GetText(t *testing.T) {
 			"Third paragraph",
 		}
 
-		paragraphs := doc.GetText()
+		text, err := doc.GetText()
+		if err != nil {
+			t.Fatalf("GetText() error = %v", err)
+		}
+		paragraphs := strings.Split(text, "\n")
 		
 		if len(paragraphs) != len(wantText) {
 			t.Errorf("GetText() returned %d paragraphs, want %d", len(paragraphs), len(wantText))
@@ -107,10 +112,13 @@ func TestWordDocument_GetText(t *testing.T) {
 		}
 		defer doc.Close()
 
-		paragraphs := doc.GetText()
+		text, err := doc.GetText()
+		if err != nil {
+			t.Fatalf("GetText() error = %v", err)
+		}
 		
-		if len(paragraphs) != 0 {
-			t.Errorf("GetText() returned %d paragraphs for empty doc, want 0", len(paragraphs))
+		if text != "" {
+			t.Errorf("GetText() returned non-empty text for empty doc: %q", text)
 		}
 	})
 
@@ -129,7 +137,11 @@ func TestWordDocument_GetText(t *testing.T) {
 			"Emoji: 😃🚀🌟",
 		}
 
-		paragraphs := doc.GetText()
+		text, err := doc.GetText()
+		if err != nil {
+			t.Fatalf("GetText() error = %v", err)
+		}
+		paragraphs := strings.Split(text, "\n")
 		
 		if len(paragraphs) != len(wantText) {
 			t.Errorf("GetText() returned %d paragraphs, want %d", len(paragraphs), len(wantText))
@@ -158,8 +170,8 @@ func TestWordDocument_ReplaceText(t *testing.T) {
 			new:     "example",
 			wantErr: false,
 			verify: func(t *testing.T, doc *WordDocument) {
-				text := doc.GetText()
-				for _, para := range text {
+				text, _ := doc.GetText()
+				for _, para := range strings.Split(text, "\n") {
 					if contains(para, "sample") {
 						t.Errorf("ReplaceText() failed: still contains old text 'sample'")
 					}
@@ -175,8 +187,8 @@ func TestWordDocument_ReplaceText(t *testing.T) {
 			new:     "",
 			wantErr: false,
 			verify: func(t *testing.T, doc *WordDocument) {
-				text := doc.GetText()
-				for _, para := range text {
+				text, _ := doc.GetText()
+				for _, para := range strings.Split(text, "\n") {
 					if contains(para, "Second") {
 						t.Errorf("ReplaceText() failed: still contains old text 'Second'")
 					}
@@ -204,8 +216,8 @@ func TestWordDocument_ReplaceText(t *testing.T) {
 			new:     "<w:t>INJECTED</w:t>",
 			wantErr: false,
 			verify: func(t *testing.T, doc *WordDocument) {
-				text := doc.GetText()
-				for _, para := range text {
+				text, _ := doc.GetText()
+				for _, para := range strings.Split(text, "\n") {
 					// The XML tags should be escaped, not interpreted
 					if contains(para, "INJECTED") && !contains(para, "<w:t>") {
 						t.Errorf("ReplaceText() failed: XML injection not prevented")
@@ -223,9 +235,9 @@ func TestWordDocument_ReplaceText(t *testing.T) {
 			new:     "R&D Department",
 			wantErr: false,
 			verify: func(t *testing.T, doc *WordDocument) {
-				text := doc.GetText()
+				text, _ := doc.GetText()
 				found := false
-				for _, para := range text {
+				for _, para := range strings.Split(text, "\n") {
 					if contains(para, "R&D Department") || contains(para, "R&amp;D Department") {
 						found = true
 						break
@@ -242,9 +254,9 @@ func TestWordDocument_ReplaceText(t *testing.T) {
 			new:     `"quoted" text`,
 			wantErr: false,
 			verify: func(t *testing.T, doc *WordDocument) {
-				text := doc.GetText()
+				text, _ := doc.GetText()
 				found := false
-				for _, para := range text {
+				for _, para := range strings.Split(text, "\n") {
 					if contains(para, `"quoted" text`) || contains(para, `&quot;quoted&quot; text`) {
 						found = true
 						break
@@ -380,9 +392,9 @@ func TestWordDocument_Save(t *testing.T) {
 	}
 	defer doc2.Close()
 	
-	text := doc2.GetText()
+	text, _ := doc2.GetText()
 	found := false
-	for _, para := range text {
+	for _, para := range strings.Split(text, "\n") {
 		if contains(para, "modified") {
 			found = true
 			break
