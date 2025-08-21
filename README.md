@@ -9,10 +9,9 @@ Document automation and AI-powered content generation CLI tool for developers an
 ## 🎯 Features
 
 - ✅ **Document Conversion**: Convert Markdown to Word (.docx) and PowerPoint (.pptx)
-- ✅ **Bulk Text Replacement**: Replace text across multiple Word documents using YAML rules
-- 🔄 **PowerPoint Support**: Replace text in PowerPoint presentations (In Progress)
+- ✅ **Bulk Text Replacement**: Replace text across multiple Word and PowerPoint documents using YAML rules
+- ✅ **Template Processing**: Use Word/PowerPoint templates with placeholder replacement
 - 🤖 **AI Content Generation**: Generate content using OpenAI (Phase 2)
-- 📚 **Template Support**: Use templates for consistent document styling (Coming Soon)
 - 🚀 **Cross-Platform**: Single binary with no dependencies
 
 ## 📦 Installation
@@ -158,7 +157,7 @@ go test -run TestFunctionName ./package
 - [x] Text replacement in PowerPoint
 - [x] Markdown to Word conversion
 - [x] Markdown to PowerPoint conversion
-- [ ] Template-based generation
+- [x] Template-based generation with placeholder replacement
 
 ### Phase 2: AI Integration
 - [ ] OpenAI API integration
