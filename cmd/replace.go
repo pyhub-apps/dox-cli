@@ -2,7 +2,11 @@ package cmd
 
 import (
 	"fmt"
+	"os"
+	"path/filepath"
+	"strings"
 
+	"github.com/pyhub/pyhub-documents-cli/internal/replace"
 	"github.com/spf13/cobra"
 )
 
@@ -40,16 +44,182 @@ Examples:
   # Create backups before modifying
   pyhub-documents-cli replace --rules rules.yml --path ./docs --backup`,
 	RunE: func(cmd *cobra.Command, args []string) error {
-		// TODO: Implement replace logic
-		fmt.Printf("Replace command called with:\n")
-		fmt.Printf("  Rules file: %s\n", rulesFile)
-		fmt.Printf("  Target path: %s\n", targetPath)
-		fmt.Printf("  Dry run: %v\n", dryRun)
-		fmt.Printf("  Backup: %v\n", backup)
-		fmt.Printf("  Recursive: %v\n", recursive)
-		
-		return fmt.Errorf("replace command not yet implemented")
+		// Load rules from YAML file
+		rules, err := replace.LoadRulesFromFile(rulesFile)
+		if err != nil {
+			return fmt.Errorf("failed to load rules: %w", err)
+		}
+
+		if len(rules) == 0 {
+			fmt.Println("No replacement rules found in the file")
+			return nil
+		}
+
+		// Print rules if in dry-run mode
+		if dryRun {
+			fmt.Println("Replacement rules to be applied:")
+			for i, rule := range rules {
+				fmt.Printf("  %d. Replace '%s' with '%s'\n", i+1, rule.Old, rule.New)
+			}
+			fmt.Println()
+		}
+
+		// Check if target is a file or directory
+		info, err := os.Stat(targetPath)
+		if err != nil {
+			return fmt.Errorf("failed to access target path: %w", err)
+		}
+
+		// Create backup if requested
+		if backup && !dryRun {
+			if err := createBackup(targetPath, info.IsDir()); err != nil {
+				return fmt.Errorf("failed to create backup: %w", err)
+			}
+		}
+
+		// Process based on target type
+		if info.IsDir() {
+			// Process directory
+			if dryRun {
+				return previewDirectoryReplacements(targetPath, rules, recursive)
+			}
+			
+			results, err := replace.ReplaceInDirectoryWithResults(targetPath, rules, recursive)
+			if err != nil {
+				return fmt.Errorf("failed to process directory: %w", err)
+			}
+
+			// Print results
+			printResults(results)
+		} else {
+			// Process single file
+			if !strings.HasSuffix(strings.ToLower(targetPath), ".docx") {
+				return fmt.Errorf("only .docx files are currently supported")
+			}
+
+			if dryRun {
+				fmt.Printf("Would process file: %s\n", targetPath)
+				return nil
+			}
+
+			if err := replace.ReplaceInDocument(targetPath, rules); err != nil {
+				return fmt.Errorf("failed to process document: %w", err)
+			}
+
+			fmt.Printf("Successfully processed: %s\n", targetPath)
+		}
+
+		return nil
 	},
+}
+
+// Helper functions
+
+func createBackup(path string, isDir bool) error {
+	backupPath := path + ".backup"
+	
+	if isDir {
+		// For directories, create a backup directory with timestamp
+		timestamp := fmt.Sprintf("%d", os.Getpid())
+		backupPath = path + "_backup_" + timestamp
+		
+		// Copy directory recursively
+		return copyDir(path, backupPath)
+	}
+	
+	// For files, create a simple backup copy
+	input, err := os.ReadFile(path)
+	if err != nil {
+		return err
+	}
+	
+	return os.WriteFile(backupPath, input, 0644)
+}
+
+func copyDir(src, dst string) error {
+	return filepath.Walk(src, func(path string, info os.FileInfo, err error) error {
+		if err != nil {
+			return err
+		}
+		
+		// Calculate destination path
+		relPath, err := filepath.Rel(src, path)
+		if err != nil {
+			return err
+		}
+		dstPath := filepath.Join(dst, relPath)
+		
+		// Create directory or copy file
+		if info.IsDir() {
+			return os.MkdirAll(dstPath, info.Mode())
+		}
+		
+		// Copy file
+		input, err := os.ReadFile(path)
+		if err != nil {
+			return err
+		}
+		
+		return os.WriteFile(dstPath, input, info.Mode())
+	})
+}
+
+func previewDirectoryReplacements(dirPath string, rules []replace.Rule, recursive bool) error {
+	fmt.Println("Files that would be processed:")
+	
+	count := 0
+	err := filepath.Walk(dirPath, func(path string, info os.FileInfo, err error) error {
+		if err != nil {
+			return nil // Continue processing other files
+		}
+		
+		// Skip directories
+		if info.IsDir() {
+			// If not recursive, skip subdirectories
+			if !recursive && path != dirPath {
+				return filepath.SkipDir
+			}
+			return nil
+		}
+		
+		// Process only .docx files
+		if strings.HasSuffix(strings.ToLower(path), ".docx") {
+			fmt.Printf("  - %s\n", path)
+			count++
+		}
+		
+		return nil
+	})
+	
+	if err != nil {
+		return err
+	}
+	
+	fmt.Printf("\nTotal files to process: %d\n", count)
+	return nil
+}
+
+func printResults(results []replace.ReplaceResult) {
+	successCount := 0
+	failureCount := 0
+	
+	fmt.Println("\nProcessing results:")
+	fmt.Println("-------------------")
+	
+	for _, result := range results {
+		if result.Success {
+			fmt.Printf("✓ %s - Success\n", result.FilePath)
+			successCount++
+		} else {
+			fmt.Printf("✗ %s - Failed: %v\n", result.FilePath, result.Error)
+			failureCount++
+		}
+	}
+	
+	fmt.Println("\nSummary:")
+	fmt.Printf("  Successful: %d\n", successCount)
+	fmt.Printf("  Failed: %d\n", failureCount)
+	fmt.Printf("  Total: %d\n", len(results))
 }
 
 func init() {
