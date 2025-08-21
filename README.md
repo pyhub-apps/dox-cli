@@ -1,8 +1,8 @@
 # pyhub-documents-cli
 
-[![Go Version](https://img.shields.io/badge/go-1.21-blue.svg)]()
-[![License](https://img.shields.io/badge/license-MIT-green.svg)]()
-[![CI Status](https://img.shields.io/badge/build-passing-brightgreen.svg)]()
+[![Go Version](https://img.shields.io/badge/go-1.21-blue.svg)](https://go.dev/)
+[![Release](https://img.shields.io/github/v/release/pyhub-kr/pyhub-documents-cli)](https://github.com/pyhub-kr/pyhub-documents-cli/releases)
+[![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
 
 Document automation and AI-powered content generation CLI tool for developers and content creators.
 
@@ -134,7 +134,8 @@ go test -run TestFunctionName ./package
 
 ### Phase 1: MVP (Current)
 - [x] Project setup and CLI structure
-- [ ] Text replacement in Word/PowerPoint
+- [x] Text replacement in Word documents
+- [ ] Text replacement in PowerPoint
 - [ ] Markdown to document conversion
 - [ ] Template-based generation
 
