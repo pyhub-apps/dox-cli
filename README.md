@@ -2,6 +2,7 @@
 
 [![Go Version](https://img.shields.io/badge/go-1.21-blue.svg)](https://go.dev/)
 [![Release](https://img.shields.io/github/v/release/pyhub-kr/pyhub-documents-cli)](https://github.com/pyhub-kr/pyhub-documents-cli/releases)
+[![HeadVer](https://img.shields.io/badge/versioning-HeadVer-blue)](https://github.com/line/headver)
 [![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
 
 Document automation and AI-powered content generation CLI tool for developers and content creators.
@@ -18,7 +19,29 @@ Document automation and AI-powered content generation CLI tool for developers an
 
 ### Download Binary
 
-Download the latest release for your platform from the [releases page](https://github.com/pyhub/pyhub-documents-cli/releases).
+Download the latest release (v1.2534.0) for your platform from the [releases page](https://github.com/pyhub-kr/pyhub-documents-cli/releases).
+
+#### Quick Install
+
+**Windows (PowerShell)**:
+```powershell
+Invoke-WebRequest -Uri "https://github.com/pyhub-kr/pyhub-documents-cli/releases/latest/download/pyhub-documents-cli.exe" -OutFile "pyhub-documents-cli.exe"
+```
+
+**macOS/Linux**:
+```bash
+# macOS Intel
+curl -L -o pyhub-documents-cli https://github.com/pyhub-kr/pyhub-documents-cli/releases/latest/download/pyhub-documents-cli-darwin-amd64
+
+# macOS Apple Silicon
+curl -L -o pyhub-documents-cli https://github.com/pyhub-kr/pyhub-documents-cli/releases/latest/download/pyhub-documents-cli-darwin-arm64
+
+# Linux
+curl -L -o pyhub-documents-cli https://github.com/pyhub-kr/pyhub-documents-cli/releases/latest/download/pyhub-documents-cli-linux-amd64
+
+chmod +x pyhub-documents-cli
+sudo mv pyhub-documents-cli /usr/local/bin/
+```
 
 ### Build from Source
 
@@ -181,6 +204,13 @@ We welcome contributions! Please see our [Contributing Guide](CONTRIBUTING.md) f
 4. Write tests first (TDD)
 5. Implement the feature
 6. Submit a pull request
+
+## 🔢 Versioning
+
+This project uses [HeadVer](https://github.com/line/headver) versioning system:
+- **Format**: `{head}.{yearweek}.{build}`
+- **Example**: v1.2534.0 = Head version 1, Year 2025 Week 34, Build 0
+- **Benefits**: Clear release timeline, sprint alignment, automatic build tracking
 
 ## 📄 License
 
