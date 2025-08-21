@@ -8,10 +8,11 @@ Document automation and AI-powered content generation CLI tool for developers an
 
 ## 🎯 Features
 
-- 📝 **Document Conversion**: Convert Markdown to Word/PowerPoint documents
-- 🔄 **Bulk Text Replacement**: Replace text across multiple Office documents
+- ✅ **Document Conversion**: Convert Markdown to Word (.docx) and PowerPoint (.pptx)
+- ✅ **Bulk Text Replacement**: Replace text across multiple Word documents using YAML rules
+- 🔄 **PowerPoint Support**: Replace text in PowerPoint presentations (In Progress)
 - 🤖 **AI Content Generation**: Generate content using OpenAI (Phase 2)
-- 📚 **Template Support**: Use templates for consistent document styling
+- 📚 **Template Support**: Use templates for consistent document styling (Coming Soon)
 - 🚀 **Cross-Platform**: Single binary with no dependencies
 
 ## 📦 Installation
@@ -56,13 +57,31 @@ pyhub-documents-cli replace --rules rules.yml --path ./docs
 
 ### Create Document from Markdown
 
+Convert Markdown files to Word or PowerPoint:
+
 ```bash
-# Basic conversion
+# Convert to Word document
 pyhub-documents-cli create --from report.md --output report.docx
 
-# With template
+# Convert to PowerPoint presentation
+pyhub-documents-cli create --from slides.md --output presentation.pptx
+
+# Format is auto-detected from extension, or specify explicitly
+pyhub-documents-cli create --from content.md --output output.docx --format docx
+
+# With template (Coming Soon)
 pyhub-documents-cli create --from content.md --template company.docx --output final.docx
 ```
+
+**Markdown to PowerPoint Conversion:**
+- H1 headers (`#`) become new slides
+- H2-H6 headers become content within slides
+- Lists, paragraphs, and code blocks are preserved
+
+**Markdown to Word Conversion:**
+- All Markdown elements are converted to Word formatting
+- Heading hierarchy is preserved
+- Lists, code blocks, and quotes are styled appropriately
 
 ### Generate AI Content (Coming Soon)
 
@@ -135,8 +154,9 @@ go test -run TestFunctionName ./package
 ### Phase 1: MVP (Current)
 - [x] Project setup and CLI structure
 - [x] Text replacement in Word documents
-- [ ] Text replacement in PowerPoint
-- [ ] Markdown to document conversion
+- [x] Text replacement in PowerPoint
+- [x] Markdown to Word conversion
+- [x] Markdown to PowerPoint conversion
 - [ ] Template-based generation
 
 ### Phase 2: AI Integration
