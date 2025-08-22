@@ -2,10 +2,11 @@
 
 # Variables
 BINARY_NAME=pyhub-docs
-VERSION=$(shell git describe --tags --always --dirty 2>/dev/null || echo "dev")
+# Use HeadVer versioning system if script exists, otherwise fall back to git describe
+VERSION=$(shell if [ -f ./scripts/headver.sh ]; then ./scripts/headver.sh; else git describe --tags --always --dirty 2>/dev/null || echo "dev"; fi)
 COMMIT=$(shell git rev-parse --short HEAD 2>/dev/null || echo "none")
 DATE=$(shell date -u +%Y-%m-%dT%H:%M:%SZ)
-LDFLAGS=-ldflags "-s -w -X github.com/pyhub/pyhub-docs/cmd.version=${VERSION} -X github.com/pyhub/pyhub-docs/cmd.commit=${COMMIT} -X github.com/pyhub/pyhub-docs/cmd.date=${DATE}"
+LDFLAGS=-ldflags "-s -w -X main.version=${VERSION} -X main.commit=${COMMIT} -X main.date=${DATE}"
 
 # Go parameters
 GOCMD=go

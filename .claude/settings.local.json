@@ -31,7 +31,12 @@
       "Bash(./pyhub-docs --help)",
       "Bash(./pyhub-docs --lang ko --help)",
       "Bash(LANG=ko_KR.UTF-8 ./pyhub-docs --help)",
-      "Bash(LANG=ko_KR.UTF-8 ./pyhub-docs replace --help)"
+      "Bash(LANG=ko_KR.UTF-8 ./pyhub-docs replace --help)",
+      "Bash(git tag:*)",
+      "WebFetch(domain:techblog.lycorp.co.jp)",
+      "Bash(chmod:*)",
+      "Bash(./scripts/headver.sh:*)",
+      "Bash(./pyhub-docs version)"
     ],
     "deny": [],
     "ask": []

@@ -48,17 +48,30 @@ jobs:
         with:
           go-version: '1.21'
 
-      - name: Get version from tag
+      - name: Get version from tag or HeadVer
         id: version
-        run: echo "VERSION=${GITHUB_REF#refs/tags/}" >> $GITHUB_OUTPUT
+        run: |
+          # Try to use HeadVer if available, otherwise use tag
+          if [ -f ./scripts/headver.sh ]; then
+            chmod +x ./scripts/headver.sh
+            VERSION=$(BUILD_NUMBER=$GITHUB_RUN_NUMBER ./scripts/headver.sh)
+            echo "VERSION=${VERSION}" >> $GITHUB_OUTPUT
+          else
+            echo "VERSION=${GITHUB_REF#refs/tags/}" >> $GITHUB_OUTPUT
+          fi
 
       - name: Build binary
         env:
           GOOS: ${{ matrix.goos }}
           GOARCH: ${{ matrix.goarch }}
           CGO_ENABLED: 0
+          BUILD_NUMBER: ${{ github.run_number }}
         run: |
-          go build -ldflags="-s -w -X main.version=${{ steps.version.outputs.VERSION }}" \
+          VERSION="${{ steps.version.outputs.VERSION }}"
+          COMMIT=$(git rev-parse --short HEAD)
+          DATE=$(date -u +%Y-%m-%dT%H:%M:%SZ)
+          
+          go build -ldflags="-s -w -X github.com/pyhub/pyhub-docs/cmd.Version=${VERSION} -X github.com/pyhub/pyhub-docs/cmd.Commit=${COMMIT} -X github.com/pyhub/pyhub-docs/cmd.BuildDate=${DATE}" \
             -o ${{ matrix.binary_name }}
           
           # Rename to platform-specific name

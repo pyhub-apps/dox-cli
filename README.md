@@ -1,7 +1,7 @@
 # pyhub-docs
 
 [![Go Version](https://img.shields.io/badge/go-1.21-blue.svg)](https://go.dev/)
-[![Release](https://img.shields.io/github/v/release/pyhub-kr/pyhub-docs)](https://github.com/pyhub-kr/pyhub-docs/releases)
+[![Release](https://img.shields.io/github/v/release/pyhub-kr/pyhub-documents-cli)](https://github.com/pyhub-kr/pyhub-documents-cli/releases)
 [![HeadVer](https://img.shields.io/badge/versioning-HeadVer-blue)](https://github.com/line/headver)
 [![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
 
@@ -20,13 +20,15 @@ Document automation and AI-powered content generation CLI tool for developers an
 
 ### Download Binary
 
-Download the latest release (v1.2534.0) for your platform from the [releases page](https://github.com/pyhub-kr/pyhub-docs/releases).
+Download the latest release for your platform from the [releases page](https://github.com/pyhub-kr/pyhub-documents-cli/releases).
+
+> **Note**: This project uses [HeadVer](VERSIONING.md) versioning system (`{head}.{yearweek}.{build}`).
 
 #### Quick Install
 
 **Windows (PowerShell)**:
 ```powershell
-Invoke-WebRequest -Uri "https://github.com/pyhub-kr/pyhub-docs/releases/latest/download/pyhub-docs.exe" -OutFile "pyhub-docs.exe"
+Invoke-WebRequest -Uri "https://github.com/pyhub-kr/pyhub-documents-cli/releases/latest/download/pyhub-docs-windows-amd64.exe" -OutFile "pyhub-docs.exe"
 ```
 
 **macOS/Linux**:
