@@ -1,0 +1,70 @@
+# Example prompts for AI content generation
+# Usage: dox generate --type [type] --prompt "[prompt]" --output [file]
+
+## Blog Post Examples
+
+1. Technical Tutorial:
+   "Write a comprehensive tutorial on implementing authentication in Go web applications using JWT tokens"
+
+2. Best Practices:
+   "Explain best practices for error handling in microservices architecture"
+
+3. Comparison Article:
+   "Compare Docker and Kubernetes for container orchestration, highlighting pros and cons"
+
+## Report Examples
+
+1. Market Analysis:
+   "Analyze the current state of AI in document processing industry for 2025"
+
+2. Project Status:
+   "Generate a quarterly project status report for a software development project that is 75% complete"
+
+3. Performance Review:
+   "Create a performance analysis report for a web application with focus on optimization recommendations"
+
+## Summary Examples
+
+1. Technical Documentation:
+   "Summarize the key features and benefits of GraphQL compared to REST APIs"
+
+2. Meeting Notes:
+   "Summarize key decisions and action items from a product planning meeting"
+
+3. Research Paper:
+   "Provide an executive summary of recent advances in natural language processing"
+
+## Custom Content Examples
+
+1. Email Template:
+   "Create a professional email template for announcing a new product feature to customers"
+
+2. API Documentation:
+   "Write comprehensive API documentation for a user management REST endpoint"
+
+3. User Guide:
+   "Create a user guide for a document automation CLI tool with examples"
+
+## Advanced Prompts with Parameters
+
+# High creativity blog post
+dox generate --type blog \
+  --prompt "Write a creative blog post about the future of AI in everyday life" \
+  --temperature 0.9 \
+  --max-tokens 2500 \
+  --output future-ai.md
+
+# Precise technical documentation
+dox generate --type custom \
+  --prompt "Document a REST API for user authentication with exact specifications" \
+  --temperature 0.3 \
+  --max-tokens 3000 \
+  --model gpt-4 \
+  --output api-docs.md
+
+# Concise summary
+dox generate --type summary \
+  --prompt "Summarize the benefits of microservices architecture in 5 bullet points" \
+  --temperature 0.5 \
+  --max-tokens 500 \
+  --output microservices-summary.md

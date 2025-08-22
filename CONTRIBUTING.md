@@ -1,292 +1,422 @@
-# Contributing to pyhub-docs
+# Contributing to dox
 
-Thank you for your interest in contributing to pyhub-docs! This document provides guidelines and instructions for contributing.
+Thank you for your interest in contributing to dox! We welcome contributions from the community and are grateful for any help you can provide.
 
-## 🎯 Development Philosophy
+## 📋 Table of Contents
 
-We follow **Test-Driven Development (TDD)**:
-1. **Red**: Write a failing test first
-2. **Green**: Write minimal code to make the test pass
-3. **Refactor**: Improve the code while keeping tests green
+- [Code of Conduct](#code-of-conduct)
+- [Getting Started](#getting-started)
+- [Development Setup](#development-setup)
+- [How to Contribute](#how-to-contribute)
+- [Development Workflow](#development-workflow)
+- [Coding Standards](#coding-standards)
+- [Testing](#testing)
+- [Documentation](#documentation)
+- [Submitting Changes](#submitting-changes)
+- [Release Process](#release-process)
+
+## 📜 Code of Conduct
+
+Please note that this project is released with a [Contributor Code of Conduct](CODE_OF_CONDUCT.md). By participating in this project you agree to abide by its terms.
 
 ## 🚀 Getting Started
+
+1. **Fork the repository** on GitHub
+2. **Clone your fork** locally
+3. **Create a branch** for your changes
+4. **Make your changes** and commit them
+5. **Push to your fork** and submit a pull request
+
+## 💻 Development Setup
 
 ### Prerequisites
 
 - Go 1.21 or higher
 - Git
 - Make (optional but recommended)
+- Your favorite code editor (we recommend VS Code with Go extension)
 
-### Setting Up Development Environment
+### Initial Setup
 
 ```bash
-# Fork and clone the repository
-git clone https://github.com/YOUR_USERNAME/pyhub-docs.git
-cd pyhub-docs
+# Clone your fork
+git clone https://github.com/YOUR-USERNAME/pyhub-documents-cli.git
+cd pyhub-documents-cli
+
+# Add upstream remote
+git remote add upstream https://github.com/pyhub-kr/pyhub-documents-cli.git
 
 # Install dependencies
 go mod download
 
-# Run tests to verify setup
-make test
+# Build the project
+go build -o dox
+
+# Run tests
+go test ./...
 ```
 
-## 📋 Development Process
+### Development Tools
 
-### 1. Check or Create an Issue
+```bash
+# Install development tools
+go install github.com/golangci/golangci-lint/cmd/golangci-lint@latest
+go install golang.org/x/tools/cmd/goimports@latest
+go install github.com/securego/gosec/v2/cmd/gosec@latest
+```
 
-Before starting work:
-- Check existing [issues](https://github.com/pyhub/pyhub-docs/issues)
-- If none exists, create a new issue describing what you want to work on
-- Wait for maintainer feedback/approval for significant changes
+## 🤝 How to Contribute
+
+### Reporting Bugs
+
+Before creating bug reports, please check existing issues to avoid duplicates. When creating a bug report, include:
+
+1. **Clear title and description**
+2. **Steps to reproduce**
+3. **Expected behavior**
+4. **Actual behavior**
+5. **System information** (OS, Go version, dox version)
+6. **Relevant logs or error messages**
+
+### Suggesting Enhancements
+
+Enhancement suggestions are tracked as GitHub issues. When creating an enhancement suggestion, include:
+
+1. **Clear title and description**
+2. **Use case and motivation**
+3. **Possible implementation approach**
+4. **Alternative solutions considered**
+
+### Code Contributions
+
+1. **Find an issue** to work on or create a new one
+2. **Comment on the issue** to let others know you're working on it
+3. **Follow the development workflow** below
+
+## 🔄 Development Workflow
+
+### 1. Sync with Upstream
+
+```bash
+git checkout main
+git fetch upstream
+git rebase upstream/main
+```
 
 ### 2. Create a Feature Branch
 
 ```bash
-git checkout -b feature/#ISSUE_NUMBER-brief-description
-# Example: feature/#5-yaml-parser
+git checkout -b feature/your-feature-name
+# or
+git checkout -b fix/issue-number-description
 ```
 
-### 3. Write Tests First (TDD)
+### 3. Make Your Changes
 
-Create test file before implementation:
+Follow these guidelines:
+- Write clear, concise commit messages
+- Keep commits focused and atomic
+- Include tests for new features
+- Update documentation as needed
+
+### 4. Commit Message Format
+
+We follow the [Conventional Commits](https://www.conventionalcommits.org/) specification:
+
+```
+type(scope): description
+
+[optional body]
+
+[optional footer(s)]
+```
+
+Types:
+- `feat`: New feature
+- `fix`: Bug fix
+- `docs`: Documentation changes
+- `style`: Code style changes (formatting, etc.)
+- `refactor`: Code refactoring
+- `test`: Test additions or modifications
+- `chore`: Maintenance tasks
+
+Examples:
+```bash
+git commit -m "feat(replace): add support for Excel files"
+git commit -m "fix(template): handle missing placeholders gracefully"
+git commit -m "docs: update installation instructions"
+```
+
+### 5. Test Your Changes
+
+```bash
+# Run all tests
+go test ./...
+
+# Run tests with coverage
+go test -cover ./...
+
+# Run specific package tests
+go test ./internal/replace
+
+# Run tests with race detection
+go test -race ./...
+```
+
+### 6. Update Documentation
+
+- Update README.md if needed
+- Update command help text
+- Add examples if introducing new features
+- Update API documentation for library changes
+
+## 📝 Coding Standards
+
+### Go Code Style
+
+We follow the standard Go style guidelines:
+
+1. **Format code** with `gofmt`
+2. **Organize imports** with `goimports`
+3. **Follow [Effective Go](https://golang.org/doc/effective_go.html)**
+4. **Use meaningful variable names**
+5. **Comment exported functions and types**
+
+### Code Quality Checks
+
+```bash
+# Format code
+go fmt ./...
+
+# Run linter
+golangci-lint run
+
+# Security scan
+gosec ./...
+
+# Vet code
+go vet ./...
+```
+
+### Project-Specific Guidelines
+
+1. **Error Handling**
+   - Always check errors
+   - Use custom error types in `internal/errors`
+   - Provide context with error wrapping
+
+2. **Internationalization**
+   - All user-facing strings must support i18n
+   - Add translations to `locales/` directory
+   - Use `i18n.T()` for translatable strings
+
+3. **Testing**
+   - Write unit tests for all new functions
+   - Maintain >80% code coverage
+   - Use table-driven tests where appropriate
+   - Mock external dependencies
+
+4. **Performance**
+   - Use concurrent processing where beneficial
+   - Implement progress indicators for long operations
+   - Profile code for performance bottlenecks
+
+## 🧪 Testing
+
+### Unit Tests
 
 ```go
-// internal/replace/parser_test.go
-func TestParseYAMLRules(t *testing.T) {
-    // Write your test cases here
+// Example test structure
+func TestFunctionName(t *testing.T) {
     tests := []struct {
         name    string
         input   string
-        want    []Rule
+        want    string
         wantErr bool
     }{
-        // Test cases...
+        {
+            name:  "valid input",
+            input: "test",
+            want:  "expected",
+        },
+        // Add more test cases
     }
-    
+
     for _, tt := range tests {
         t.Run(tt.name, func(t *testing.T) {
-            // Test implementation
+            got, err := FunctionName(tt.input)
+            if (err != nil) != tt.wantErr {
+                t.Errorf("FunctionName() error = %v, wantErr %v", err, tt.wantErr)
+                return
+            }
+            if got != tt.want {
+                t.Errorf("FunctionName() = %v, want %v", got, tt.want)
+            }
         })
     }
 }
 ```
 
-### 4. Implement the Feature
+### Integration Tests
 
-Write the minimal code to make tests pass:
+Place integration tests in `*_integration_test.go` files and use build tags:
 
 ```go
-// internal/replace/parser.go
-func ParseYAMLRules(data []byte) ([]Rule, error) {
-    // Implementation
+//go:build integration
+// +build integration
+
+package package_test
+
+func TestIntegration(t *testing.T) {
+    // Integration test code
 }
 ```
 
-### 5. Run Tests and Checks
-
+Run integration tests:
 ```bash
-# Run tests
-make test
-
-# Check coverage
-make coverage
-
-# Format code
-make fmt
-
-# Run linter
-make lint
-
-# Run all checks
-make ci
-```
-
-### 6. Commit Your Changes
-
-Follow conventional commit format:
-
-```bash
-git add .
-git commit -m "feat: add YAML rules parser for replace command
-
-- Implement ParseYAMLRules function
-- Add comprehensive test cases
-- Handle edge cases
-
-Closes #5"
-```
-
-Commit types:
-- `feat`: New feature
-- `fix`: Bug fix
-- `docs`: Documentation changes
-- `test`: Test additions/changes
-- `refactor`: Code refactoring
-- `chore`: Build/tooling changes
-
-### 7. Push and Create Pull Request
-
-```bash
-git push origin feature/#5-yaml-parser
-```
-
-Then create a PR on GitHub with:
-- Clear title and description
-- Reference to the issue
-- Test results/coverage
-- Screenshots if applicable
-
-## 🧪 Testing Guidelines
-
-### Test Structure
-
-```go
-func TestFunctionName(t *testing.T) {
-    // Arrange
-    input := setupTestData()
-    
-    // Act
-    result, err := FunctionToTest(input)
-    
-    // Assert
-    assert.NoError(t, err)
-    assert.Equal(t, expected, result)
-}
-```
-
-### Test Categories
-
-1. **Unit Tests**: Test individual functions
-2. **Integration Tests**: Test component interactions
-3. **E2E Tests**: Test complete workflows
-
-### Test Coverage
-
-- Minimum 80% coverage for new code
-- 100% coverage for critical paths
-- Use `testdata/` directory for test fixtures
-
-## 📝 Code Style
-
-### Go Conventions
-
-- Follow [Effective Go](https://golang.org/doc/effective_go.html)
-- Use `gofmt` for formatting
-- Use meaningful variable names
-- Add comments for exported functions
-- Keep functions small and focused
-
-### Example Code Style
-
-```go
-// ParseRules parses replacement rules from YAML data.
-// It returns an error if the YAML is invalid or contains
-// unsupported rule formats.
-func ParseRules(data []byte) ([]Rule, error) {
-    var rules []Rule
-    
-    if err := yaml.Unmarshal(data, &rules); err != nil {
-        return nil, fmt.Errorf("failed to parse YAML: %w", err)
-    }
-    
-    // Validate rules
-    for i, rule := range rules {
-        if err := rule.Validate(); err != nil {
-            return nil, fmt.Errorf("invalid rule at index %d: %w", i, err)
-        }
-    }
-    
-    return rules, nil
-}
+go test -tags=integration ./...
 ```
 
 ## 📚 Documentation
 
 ### Code Documentation
 
-- Document all exported types and functions
-- Use clear, concise GoDoc comments
-- Include examples where helpful
+- Document all exported types, functions, and methods
+- Use clear, concise comments
+- Include examples in documentation where helpful
 
 ```go
-// Rule represents a text replacement rule.
-// It defines what text to find (Old) and what to replace it with (New).
-type Rule struct {
-    Old string `yaml:"old"`
-    New string `yaml:"new"`
+// ProcessDocument processes a Word or PowerPoint document by applying
+// the specified replacement rules. It returns the number of replacements
+// made and any error encountered.
+//
+// Example:
+//   count, err := ProcessDocument("document.docx", rules)
+//   if err != nil {
+//       log.Fatal(err)
+//   }
+//   fmt.Printf("Made %d replacements\n", count)
+func ProcessDocument(path string, rules []Rule) (int, error) {
+    // Implementation
 }
 ```
 
 ### User Documentation
 
-Update relevant documentation:
-- `README.md` for features/usage
-- `docs/` for detailed guides
-- `CHANGELOG.md` for notable changes
+- Update README.md for user-facing changes
+- Add examples to `examples/` directory
+- Update command help text in Cobra commands
 
-## 🔍 Code Review Process
+## 📤 Submitting Changes
 
-PRs will be reviewed for:
-1. **Functionality**: Does it work as intended?
-2. **Tests**: Are there comprehensive tests?
-3. **Code Quality**: Is it clean and maintainable?
-4. **Documentation**: Is it well documented?
-5. **Performance**: Are there any performance concerns?
+### Pull Request Process
 
-## 🐛 Reporting Issues
+1. **Update your branch** with the latest upstream changes
+2. **Push your changes** to your fork
+3. **Create a Pull Request** with:
+   - Clear title and description
+   - Reference to related issues
+   - List of changes made
+   - Screenshots (if UI changes)
+   - Test results
 
-When reporting issues, include:
-- Clear description
-- Steps to reproduce
-- Expected vs actual behavior
-- Environment details (OS, Go version)
-- Error messages/logs
+### Pull Request Template
 
-## 💡 Suggesting Features
+```markdown
+## Description
+Brief description of changes
 
-Feature suggestions should include:
-- Use case description
-- Proposed solution
-- Alternative solutions considered
-- Potential impact on existing features
+## Related Issue
+Fixes #(issue number)
 
-## 📊 Project Structure
+## Type of Change
+- [ ] Bug fix
+- [ ] New feature
+- [ ] Documentation update
+- [ ] Performance improvement
+- [ ] Code refactoring
 
-```
-pyhub-docs/
-├── cmd/            # CLI commands
-│   ├── root.go
-│   ├── replace.go
-│   ├── create.go
-│   └── generate.go
-├── internal/       # Internal packages
-│   ├── docx/       # Word document processing
-│   ├── pptx/       # PowerPoint processing
-│   ├── markdown/   # Markdown parsing
-│   └── replace/    # Replacement logic
-├── pkg/            # Public packages
-│   └── documents/  # Document API
-├── tests/          # Test files
-│   └── testdata/   # Test fixtures
-└── docs/           # Documentation
+## Checklist
+- [ ] Tests pass locally
+- [ ] Code follows style guidelines
+- [ ] Documentation updated
+- [ ] Changelog updated (if needed)
 ```
 
-## 🎉 Recognition
+### Review Process
 
-Contributors will be:
-- Listed in release notes
-- Added to CONTRIBUTORS.md
-- Mentioned in relevant documentation
+1. Automated checks must pass
+2. At least one maintainer review required
+3. All feedback addressed
+4. Branch up to date with main
 
-## 📜 License
+## 🚢 Release Process
 
-By contributing, you agree that your contributions will be licensed under the MIT License.
+We use [HeadVer](https://github.com/line/headver) versioning:
 
-## 🙋 Getting Help
+```
+{head}.{yearweek}.{build}
+```
 
-- Create an issue for bugs
-- Use discussions for questions
-- Check existing issues/PRs first
+### Creating a Release
 
-Thank you for contributing to pyhub-docs! 🚀
+1. **Update version** in code
+2. **Update CHANGELOG.md**
+3. **Create release PR**
+4. **Tag release** after merge
+5. **Build binaries** for all platforms
+6. **Create GitHub release** with binaries
+
+### Release Checklist
+
+- [ ] All tests passing
+- [ ] Documentation updated
+- [ ] CHANGELOG.md updated
+- [ ] Version bumped
+- [ ] Binaries built for all platforms
+- [ ] Release notes written
+- [ ] GitHub release created
+
+## 🎯 Areas for Contribution
+
+### Good First Issues
+
+Look for issues labeled `good first issue` - these are great for newcomers.
+
+### Priority Areas
+
+- **Excel Support**: Add support for .xlsx files
+- **PDF Generation**: Implement PDF export functionality
+- **Performance**: Optimize document processing speed
+- **Testing**: Increase test coverage
+- **Documentation**: Improve user guides and examples
+- **Internationalization**: Add more language support
+
+### Feature Ideas
+
+- Cloud storage integration (S3, Google Drive)
+- Web UI interface
+- Plugin system
+- More AI providers (Claude, Gemini)
+- Document comparison features
+- Batch processing improvements
+
+## 📞 Getting Help
+
+- **Discord**: Join our community (coming soon)
+- **GitHub Discussions**: Ask questions and share ideas
+- **Issue Tracker**: Report bugs and request features
+- **Email**: support@pyhub.kr
+
+## 🙏 Recognition
+
+Contributors will be recognized in:
+- CONTRIBUTORS.md file
+- Release notes
+- Project documentation
+
+Thank you for contributing to dox! Your efforts help make document automation better for everyone.
+
+---
+
+**Note**: This contributing guide is a living document. If you find something confusing or have suggestions for improvement, please let us know!

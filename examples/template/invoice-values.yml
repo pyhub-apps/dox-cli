@@ -1,0 +1,67 @@
+# Invoice template values
+# Usage: dox template --template invoice-template.docx --values invoice-values.yml --output invoice-final.docx
+
+# Company Information
+company:
+  name: "Tech Solutions Inc."
+  address: "123 Business Ave, Suite 500"
+  city: "San Francisco, CA 94105"
+  phone: "+1 (555) 123-4567"
+  email: "billing@techsolutions.com"
+  website: "www.techsolutions.com"
+
+# Client Information
+client:
+  name: "Acme Corporation"
+  contact: "John Smith"
+  address: "456 Client Street"
+  city: "New York, NY 10001"
+  email: "accounts@acmecorp.com"
+
+# Invoice Details
+invoice:
+  number: "INV-2025-0142"
+  date: "January 15, 2025"
+  due_date: "February 15, 2025"
+  payment_terms: "Net 30"
+
+# Line Items
+items:
+  - description: "Software Development Services"
+    quantity: 80
+    rate: 150
+    amount: 12000
+  
+  - description: "UI/UX Design"
+    quantity: 40
+    rate: 125
+    amount: 5000
+  
+  - description: "Project Management"
+    quantity: 20
+    rate: 100
+    amount: 2000
+  
+  - description: "Quality Assurance Testing"
+    quantity: 30
+    rate: 100
+    amount: 3000
+
+# Totals
+totals:
+  subtotal: 22000
+  tax_rate: 8.5
+  tax_amount: 1870
+  total: 23870
+
+# Payment Information
+payment:
+  bank_name: "First National Bank"
+  account_name: "Tech Solutions Inc."
+  account_number: "****4567"
+  routing_number: "121000248"
+  swift_code: "FNBAUS3N"
+
+# Notes
+notes: "Thank you for your business! Please include invoice number with payment."
+terms: "Payment is due within 30 days. Late payments subject to 1.5% monthly interest."

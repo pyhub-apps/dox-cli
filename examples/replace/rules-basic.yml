@@ -1,0 +1,23 @@
+# Basic text replacement rules
+# Usage: dox replace --rules rules-basic.yml --path ./documents
+
+# Simple text replacements
+- old: "2023"
+  new: "2024"
+
+- old: "Version 1.0"
+  new: "Version 2.0"
+
+- old: "Draft"
+  new: "Final"
+
+# Company name change
+- old: "OldCompany Inc."
+  new: "NewCompany Ltd."
+
+# Contact information update
+- old: "support@oldcompany.com"
+  new: "support@newcompany.com"
+
+- old: "+1-555-0100"
+  new: "+1-555-0200"
