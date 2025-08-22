@@ -32,13 +32,13 @@ provided via command-line flags or from a YAML/JSON file.
 
 Examples:
   # Process template with inline values
-  pyhub-documents-cli template --template report.docx --output final.docx --set title="Q4 Report" --set year="2024"
+  dox template --template report.docx --output final.docx --set title="Q4 Report" --set year="2024"
 
   # Process template with values from YAML file
-  pyhub-documents-cli template --template presentation.pptx --values data.yaml --output final.pptx
+  dox template --template presentation.pptx --values data.yaml --output final.pptx
 
   # Force overwrite existing file
-  pyhub-documents-cli template --template template.docx --values values.yaml --output output.docx --force
+  dox template --template template.docx --values values.yaml --output output.docx --force
 
 Values file format (YAML):
   title: "Annual Report"

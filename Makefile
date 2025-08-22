@@ -1,7 +1,7 @@
-# Makefile for pyhub-docs
+# Makefile for dox
 
 # Variables
-BINARY_NAME=pyhub-docs
+BINARY_NAME=dox
 # Use HeadVer versioning system if script exists, otherwise fall back to git describe
 VERSION=$(shell if [ -f ./scripts/headver.sh ]; then ./scripts/headver.sh; else git describe --tags --always --dirty 2>/dev/null || echo "dev"; fi)
 COMMIT=$(shell git rev-parse --short HEAD 2>/dev/null || echo "none")

@@ -1,4 +1,4 @@
-# pyhub-docs
+# dox
 
 [![Go Version](https://img.shields.io/badge/go-1.21-blue.svg)](https://go.dev/)
 [![Release](https://img.shields.io/github/v/release/pyhub-kr/pyhub-documents-cli)](https://github.com/pyhub-kr/pyhub-documents-cli/releases)
@@ -9,9 +9,9 @@
 
 ## 🎯 소개
 
-`pyhub-docs`는 반복적인 문서 작업을 자동화하고, 마크다운을 Office 문서로 변환하며, 템플릿 기반 문서 생성을 지원하는 Go 언어 기반 CLI 도구입니다.
+`dox`는 반복적인 문서 작업을 자동화하고, 마크다운을 Office 문서로 변환하며, 템플릿 기반 문서 생성을 지원하는 Go 언어 기반 CLI 도구입니다.
 
-### 왜 pyhub-docs인가?
+### 왜 dox인가?
 
 - 📝 **수작업 제거**: 수십, 수백 개의 문서에서 텍스트를 일괄 변경
 - 🔄 **형식 변환**: 마크다운으로 작성하고 Word/PowerPoint로 자동 변환
@@ -41,30 +41,30 @@
 #### Windows
 ```powershell
 # PowerShell에서 실행
-Invoke-WebRequest -Uri "https://github.com/pyhub-kr/pyhub-documents-cli/releases/latest/download/pyhub-docs-windows-amd64.exe" -OutFile "pyhub-docs.exe"
+Invoke-WebRequest -Uri "https://github.com/pyhub-kr/pyhub-documents-cli/releases/latest/download/dox-windows-amd64.exe" -OutFile "dox.exe"
 
 # PATH에 추가하거나 원하는 위치로 이동
-Move-Item pyhub-docs.exe C:\Windows\System32\
+Move-Item dox.exe C:\Windows\System32\
 ```
 
 #### macOS
 ```bash
 # Intel Mac
-curl -L https://github.com/pyhub-kr/pyhub-documents-cli/releases/latest/download/pyhub-docs-darwin-amd64 -o pyhub-docs
+curl -L https://github.com/pyhub-kr/pyhub-documents-cli/releases/latest/download/dox-darwin-amd64 -o dox
 
 # Apple Silicon (M1/M2)
-curl -L https://github.com/pyhub-kr/pyhub-documents-cli/releases/latest/download/pyhub-docs-darwin-arm64 -o pyhub-docs
+curl -L https://github.com/pyhub-kr/pyhub-documents-cli/releases/latest/download/dox-darwin-arm64 -o dox
 
 # 실행 권한 부여 및 설치
-chmod +x pyhub-docs
-sudo mv pyhub-docs /usr/local/bin/
+chmod +x dox
+sudo mv dox /usr/local/bin/
 ```
 
 #### Linux
 ```bash
-curl -L https://github.com/pyhub-kr/pyhub-documents-cli/releases/latest/download/pyhub-docs-linux-amd64 -o pyhub-docs
-chmod +x pyhub-docs
-sudo mv pyhub-docs /usr/local/bin/
+curl -L https://github.com/pyhub-kr/pyhub-documents-cli/releases/latest/download/dox-linux-amd64 -o dox
+chmod +x dox
+sudo mv dox /usr/local/bin/
 ```
 
 ### 소스에서 빌드
@@ -109,16 +109,16 @@ make build-linux    # Linux
 #### 실행 명령
 ```bash
 # 단일 파일 처리
-pyhub-docs replace --rules rules.yml --path 보고서.docx
+dox replace --rules rules.yml --path 보고서.docx
 
 # 디렉토리 내 모든 문서 처리
-pyhub-docs replace --rules rules.yml --path ./문서폴더
+dox replace --rules rules.yml --path ./문서폴더
 
 # 미리보기 (실제 변경하지 않음)
-pyhub-docs replace --rules rules.yml --path ./문서폴더 --dry-run
+dox replace --rules rules.yml --path ./문서폴더 --dry-run
 
 # 백업 생성 후 처리
-pyhub-docs replace --rules rules.yml --path ./문서폴더 --backup
+dox replace --rules rules.yml --path ./문서폴더 --backup
 ```
 
 ### 2. 마크다운을 Office 문서로 변환
@@ -128,16 +128,16 @@ pyhub-docs replace --rules rules.yml --path ./문서폴더 --backup
 #### Word 문서로 변환
 ```bash
 # 기본 변환
-pyhub-docs create --from 주간보고서.md --output 주간보고서.docx
+dox create --from 주간보고서.md --output 주간보고서.docx
 
 # 기존 파일 덮어쓰기
-pyhub-docs create --from 월간보고서.md --output 월간보고서.docx --force
+dox create --from 월간보고서.md --output 월간보고서.docx --force
 ```
 
 #### PowerPoint 프레젠테이션으로 변환
 ```bash
 # 마크다운을 프레젠테이션으로 변환
-pyhub-docs create --from 발표자료.md --output 발표자료.pptx
+dox create --from 발표자료.md --output 발표자료.pptx
 ```
 
 **PowerPoint 변환 규칙:**
@@ -193,16 +193,16 @@ Word/PowerPoint 문서에 `{{변수명}}` 형식의 플레이스홀더를 삽입
 #### 실행 명령
 ```bash
 # YAML 파일로 값 제공
-pyhub-docs template --template 계약서_템플릿.docx --values values.yml --output 계약서_최종.docx
+dox template --template 계약서_템플릿.docx --values values.yml --output 계약서_최종.docx
 
 # 명령줄에서 직접 값 설정
-pyhub-docs template --template 보고서_템플릿.pptx --output 보고서_202501.pptx \
+dox template --template 보고서_템플릿.pptx --output 보고서_202501.pptx \
   --set 제목="월간 보고서" \
   --set 작성자="홍길동" \
   --set 날짜="2025년 1월"
 
 # JSON 파일도 지원
-pyhub-docs template --template 템플릿.docx --values data.json --output 결과.docx
+dox template --template 템플릿.docx --values data.json --output 결과.docx
 ```
 
 ## 🌍 다국어 지원
@@ -221,13 +221,13 @@ pyhub-docs template --template 템플릿.docx --values data.json --output 결과
 
 ```bash
 # 명시적으로 한국어 지정
-pyhub-docs --lang ko replace --rules rules.yml --path ./docs
+dox --lang ko replace --rules rules.yml --path ./docs
 
 # 시스템 언어가 한국어인 경우 자동 감지
 $ echo $LANG
 ko_KR.UTF-8
 
-$ pyhub-docs create --from 보고서.md --output 보고서.docx
+$ dox create --from 보고서.md --output 보고서.docx
 보고서.md를 Word 문서로 변환 중...
 ✅ 보고서.docx 생성 완료
 ```
@@ -236,7 +236,7 @@ $ pyhub-docs create --from 보고서.md --output 보고서.docx
 
 ```bash
 # 명시적으로 영어 지정
-pyhub-docs --lang en replace --rules rules.yml --path ./docs
+dox --lang en replace --rules rules.yml --path ./docs
 
 # 결과
 Converting report.md to Word document...
@@ -284,10 +284,10 @@ cat > year-update.yml << EOF
   new: "FY2025"
 EOF
 
-pyhub-docs replace --rules year-update.yml --path ./연간보고서 --backup
+dox replace --rules year-update.yml --path ./연간보고서 --backup
 
 # 특정 파일 제외
-pyhub-docs replace --rules rules.yml --path . --exclude "*.backup"
+dox replace --rules rules.yml --path . --exclude "*.backup"
 ```
 
 ### `create` - 마크다운 변환
@@ -332,7 +332,7 @@ echo "# 주간 회의록 - 2025년 1월 1주차
 - 추가 인력 투입" > 회의록.md
 
 # Word 문서로 변환
-pyhub-docs create --from 회의록.md --output 회의록_20250101.docx
+dox create --from 회의록.md --output 회의록_20250101.docx
 ```
 
 ### `template` - 템플릿 문서 처리
@@ -381,7 +381,7 @@ pyhub-docs create --from 회의록.md --output 회의록_20250101.docx
 
 실행:
 ```bash
-pyhub-docs template \
+dox template \
   --template 견적서_템플릿.docx \
   --values 견적_데이터.yml \
   --output 견적서_ABC_20250101.docx
@@ -448,8 +448,8 @@ make clean
 
 ### 버전 확인
 ```bash
-pyhub-docs version
-# 출력: pyhub-docs version 1.2534.23
+dox version
+# 출력: dox version 1.2534.23
 ```
 
 ## 🤝 기여하기

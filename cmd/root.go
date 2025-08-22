@@ -23,9 +23,9 @@ var (
 
 // rootCmd represents the base command when called without any subcommands
 var rootCmd = &cobra.Command{
-	Use:   "pyhub-docs",
+	Use:   "dox",
 	Short: "Document automation and AI-powered content generation CLI",
-	Long: `pyhub-docs is a powerful CLI tool for document automation.
+	Long: `dox is a powerful CLI tool for document automation.
 
 It provides:
   • Bulk text replacement across Word/PowerPoint documents
@@ -35,13 +35,13 @@ It provides:
 
 Examples:
   # Replace text in documents
-  pyhub-docs replace --rules rules.yml --path ./docs
+  dox replace --rules rules.yml --path ./docs
 
   # Create document from markdown
-  pyhub-docs create --from report.md --template template.docx --output final.docx
+  dox create --from report.md --template template.docx --output final.docx
 
   # Generate content with AI (coming soon)
-  pyhub-docs generate --type blog --prompt "Docker best practices" --output blog.md`,
+  dox generate --type blog --prompt "Docker best practices" --output blog.md`,
 	Version: Version,
 }
 

@@ -38,16 +38,16 @@ The rules file should contain replacement pairs:
 
 Examples:
   # Replace text in a single file
-  pyhub-docs replace --rules rules.yml --path document.docx
+  dox replace --rules rules.yml --path document.docx
 
   # Replace text in all documents in a directory
-  pyhub-docs replace --rules rules.yml --path ./docs
+  dox replace --rules rules.yml --path ./docs
 
   # Dry run to preview changes
-  pyhub-docs replace --rules rules.yml --path ./docs --dry-run
+  dox replace --rules rules.yml --path ./docs --dry-run
 
   # Create backups before modifying
-  pyhub-docs replace --rules rules.yml --path ./docs --backup`,
+  dox replace --rules rules.yml --path ./docs --backup`,
 	RunE: func(cmd *cobra.Command, args []string) error {
 		// Validate inputs
 		if rulesFile == "" {

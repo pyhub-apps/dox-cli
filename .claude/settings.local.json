@@ -53,7 +53,9 @@
       "Bash(./pyhub-docs config --help)",
       "Bash(./pyhub-docs config --init)",
       "Bash(./pyhub-docs config --list)",
-      "Bash(./pyhub-docs config:*)"
+      "Bash(./pyhub-docs config:*)",
+      "Bash(./dox version)",
+      "Bash(./dox --help)"
     ],
     "deny": [],
     "ask": []

@@ -34,16 +34,16 @@ Supports:
 
 Examples:
   # Create Word document from markdown
-  pyhub-documents-cli create --from report.md --output report.docx
+  dox create --from report.md --output report.docx
 
   # Use a template for styling
-  pyhub-documents-cli create --from content.md --template company-template.docx --output final.docx
+  dox create --from content.md --template company-template.docx --output final.docx
 
   # Create PowerPoint presentation
-  pyhub-documents-cli create --from slides.md --output presentation.pptx --format pptx
+  dox create --from slides.md --output presentation.pptx --format pptx
 
   # Force overwrite existing file
-  pyhub-documents-cli create --from report.md --output report.docx --force`,
+  dox create --from report.md --output report.docx --force`,
 	RunE: runCreate,
 }
 

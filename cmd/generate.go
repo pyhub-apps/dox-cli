@@ -35,16 +35,16 @@ Content types:
 
 Examples:
   # Generate a blog post
-  pyhub-documents-cli generate --type blog --prompt "Best practices for Go testing" --output blog.md
+  dox generate --type blog --prompt "Best practices for Go testing" --output blog.md
 
   # Generate a report
-  pyhub-documents-cli generate --type report --prompt "Q3 sales analysis" --output report.md
+  dox generate --type report --prompt "Q3 sales analysis" --output report.md
 
   # Summarize a document
-  pyhub-documents-cli generate --type summary --prompt "$(cat long-document.md)" --output summary.md
+  dox generate --type summary --prompt "$(cat long-document.md)" --output summary.md
 
   # Use GPT-4 for complex content
-  pyhub-documents-cli generate --type blog --prompt "Advanced Go patterns" --model gpt-4 --output article.md`,
+  dox generate --type blog --prompt "Advanced Go patterns" --model gpt-4 --output article.md`,
 	RunE: runGenerate,
 }
 

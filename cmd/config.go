@@ -31,17 +31,17 @@ var configCmd = &cobra.Command{
 
 예제:
   # 기본 설정 파일 생성
-  pyhub-docs config --init
+  dox config --init
 
   # 설정 확인
-  pyhub-docs config --list
+  dox config --list
 
   # 특정 설정 확인
-  pyhub-docs config --get openai.api_key
+  dox config --get openai.api_key
 
   # 설정 변경
-  pyhub-docs config --set "openai.api_key=sk-..."
-  pyhub-docs config --set "global.lang=ko"`,
+  dox config --set "openai.api_key=sk-..."
+  dox config --set "global.lang=ko"`,
 	RunE: runConfig,
 }
 

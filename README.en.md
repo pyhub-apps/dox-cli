@@ -34,16 +34,16 @@ Invoke-WebRequest -Uri "https://github.com/pyhub-kr/pyhub-documents-cli/releases
 **macOS/Linux**:
 ```bash
 # macOS Intel
-curl -L -o pyhub-docs https://github.com/pyhub-kr/pyhub-docs/releases/latest/download/pyhub-docs-darwin-amd64
+curl -L -o dox https://github.com/pyhub-kr/pyhub-docs/releases/latest/download/pyhub-docs-darwin-amd64
 
 # macOS Apple Silicon
-curl -L -o pyhub-docs https://github.com/pyhub-kr/pyhub-docs/releases/latest/download/pyhub-docs-darwin-arm64
+curl -L -o dox https://github.com/pyhub-kr/pyhub-docs/releases/latest/download/pyhub-docs-darwin-arm64
 
 # Linux
-curl -L -o pyhub-docs https://github.com/pyhub-kr/pyhub-docs/releases/latest/download/pyhub-docs-linux-amd64
+curl -L -o dox https://github.com/pyhub-kr/pyhub-docs/releases/latest/download/pyhub-docs-linux-amd64
 
 chmod +x pyhub-docs
-sudo mv pyhub-docs /usr/local/bin/
+sudo mv dox /usr/local/bin/
 ```
 
 ### Build from Source
@@ -77,7 +77,7 @@ Create a YAML file with replacement rules:
 
 Run the replacement:
 ```bash
-pyhub-docs replace --rules rules.yml --path ./docs
+dox replace --rules rules.yml --path ./docs
 ```
 
 ### Create Document from Markdown
@@ -86,16 +86,16 @@ Convert Markdown files to Word or PowerPoint:
 
 ```bash
 # Convert to Word document
-pyhub-docs create --from report.md --output report.docx
+dox create --from report.md --output report.docx
 
 # Convert to PowerPoint presentation
-pyhub-docs create --from slides.md --output presentation.pptx
+dox create --from slides.md --output presentation.pptx
 
 # Format is auto-detected from extension, or specify explicitly
-pyhub-docs create --from content.md --output output.docx --format docx
+dox create --from content.md --output output.docx --format docx
 
 # With template (Coming Soon)
-pyhub-docs create --from content.md --template company.docx --output final.docx
+dox create --from content.md --template company.docx --output final.docx
 ```
 
 **Markdown to PowerPoint Conversion:**
@@ -112,7 +112,7 @@ pyhub-docs create --from content.md --template company.docx --output final.docx
 ### Generate AI Content (Coming Soon)
 
 ```bash
-pyhub-docs generate --type blog --prompt "Go best practices" --output blog.md
+dox generate --type blog --prompt "Go best practices" --output blog.md
 ```
 
 ## 🌍 Internationalization (i18n)
@@ -128,13 +128,13 @@ The CLI automatically detects your system language from environment variables (`
 
 ```bash
 # Use Korean interface
-pyhub-docs --lang ko replace --rules rules.yml --path ./docs
+dox --lang ko replace --rules rules.yml --path ./docs
 
 # Use English interface
-pyhub-docs --lang en create --from report.md --output report.docx
+dox --lang en create --from report.md --output report.docx
 
 # Auto-detect from system (default)
-pyhub-docs replace --rules rules.yml --path ./docs
+dox replace --rules rules.yml --path ./docs
 ```
 
 ### System Language Detection Priority
@@ -146,12 +146,12 @@ pyhub-docs replace --rules rules.yml --path ./docs
 ### Examples
 ```bash
 # Korean system (LANG=ko_KR.UTF-8)
-$ pyhub-docs create --from report.md --output report.docx
+$ dox create --from report.md --output report.docx
 report.md를 Word 문서로 변환 중...
 ✅ report.docx 생성 완료
 
 # English system or with --lang en
-$ pyhub-docs --lang en create --from report.md --output report.docx
+$ dox --lang en create --from report.md --output report.docx
 Converting report.md to Word document...
 ✅ Successfully created report.docx
 ```
