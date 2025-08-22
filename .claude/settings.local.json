@@ -46,7 +46,14 @@
       "Bash(LANG=ko_KR.UTF-8 ./pyhub-docs template --template test-docs/template.docx --values test-docs/vars.yml --output test-docs/결과문서.docx)",
       "Bash(LANG=ko_KR.UTF-8 ./pyhub-docs create --from 없는파일.md --output test.docx)",
       "Bash(./pyhub-docs --lang ko version)",
-      "Bash(./pyhub-docs generate --help)"
+      "Bash(./pyhub-docs generate --help)",
+      "Bash(./dist/pyhub-docs-darwin-arm64:*)",
+      "Bash(dist/pyhub-docs-*)",
+      "Bash(dist/*)",
+      "Bash(./pyhub-docs config --help)",
+      "Bash(./pyhub-docs config --init)",
+      "Bash(./pyhub-docs config --list)",
+      "Bash(./pyhub-docs config:*)"
     ],
     "deny": [],
     "ask": []

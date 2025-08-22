@@ -63,6 +63,28 @@ func init() {
 }
 
 func runGenerate(cmd *cobra.Command, args []string) error {
+	// 설정 파일의 기본값 적용 (CLI 플래그가 우선)
+	if appConfig != nil {
+		// API 키: 플래그 > 설정 파일 > 환경 변수
+		if apiKey == "" && appConfig.OpenAI.APIKey != "" {
+			apiKey = appConfig.OpenAI.APIKey
+		}
+		
+		// 다른 설정들: CLI 플래그가 설정되지 않은 경우 설정 파일 사용
+		if !cmd.Flags().Changed("model") && appConfig.Generate.Model != "" {
+			model = appConfig.Generate.Model
+		}
+		if !cmd.Flags().Changed("max-tokens") && appConfig.Generate.MaxTokens > 0 {
+			maxTokens = appConfig.Generate.MaxTokens
+		}
+		if !cmd.Flags().Changed("temperature") {
+			temperature = appConfig.Generate.Temperature
+		}
+		if !cmd.Flags().Changed("type") && appConfig.Generate.ContentType != "" {
+			contentType = appConfig.Generate.ContentType
+		}
+	}
+	
 	// Validate inputs
 	if prompt == "" {
 		return pkgErrors.NewValidationError("prompt", prompt, "prompt is required")

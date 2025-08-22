@@ -5,6 +5,7 @@ import (
 	"os"
 	"path/filepath"
 
+	"github.com/pyhub/pyhub-docs/internal/config"
 	"github.com/pyhub/pyhub-docs/internal/i18n"
 	"github.com/spf13/cobra"
 )
@@ -15,6 +16,9 @@ var (
 	verbose  bool
 	quiet    bool
 	langFlag string
+	
+	// Global configuration instance
+	appConfig *config.Config
 )
 
 // rootCmd represents the base command when called without any subcommands
@@ -68,8 +72,42 @@ func init() {
 
 // initConfig reads in config file and ENV variables if set
 func initConfig() {
-	// TODO: Implement configuration loading
-	// This will be implemented when we add the config package
+	// 설정 파일 경로 결정
+	configPath := cfgFile
+	if configPath == "" {
+		configPath = config.GetConfigPath()
+	}
+	
+	// 설정 파일 로드
+	cfg, err := config.Load(configPath)
+	if err != nil {
+		// 에러가 있어도 기본 설정으로 계속 진행
+		cfg = config.DefaultConfig()
+	}
+	
+	// 전역 설정 인스턴스 저장
+	appConfig = cfg
+	
+	// CLI 플래그가 설정 파일보다 우선순위가 높음
+	// verbose 플래그가 명시적으로 설정되었는지 확인
+	if rootCmd.PersistentFlags().Changed("verbose") {
+		// CLI 플래그가 우선
+	} else {
+		// 설정 파일의 값 사용
+		verbose = cfg.Global.Verbose
+	}
+	
+	if rootCmd.PersistentFlags().Changed("quiet") {
+		// CLI 플래그가 우선
+	} else {
+		quiet = cfg.Global.Quiet
+	}
+	
+	if rootCmd.PersistentFlags().Changed("lang") {
+		// CLI 플래그가 우선
+	} else if cfg.Global.Lang != "" {
+		langFlag = cfg.Global.Lang
+	}
 }
 
 // initI18n initializes the internationalization system
