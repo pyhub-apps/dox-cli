@@ -20,6 +20,8 @@ var (
 	backup      bool
 	recursive   bool
 	excludeGlob string
+	concurrent  bool
+	maxWorkers  int
 )
 
 // replaceCmd represents the replace command
@@ -110,7 +112,25 @@ Examples:
 				return previewDirectoryReplacements(targetPath, rules, recursive)
 			}
 			
-			results, err := replace.ReplaceInDirectoryWithResultsAndExclude(targetPath, rules, recursive, excludeGlob)
+			var results []replace.ReplaceResult
+			var err error
+			
+			if concurrent {
+				// Use concurrent processing for better performance
+				opts := replace.DefaultConcurrentOptions()
+				if maxWorkers > 0 {
+					opts.MaxWorkers = maxWorkers
+				}
+				opts.ShowProgress = !quiet && !verbose
+				
+				if verbose {
+					fmt.Printf("Processing directory with %d workers...\n", opts.MaxWorkers)
+				}
+				
+				results, err = replace.ReplaceInDirectoryConcurrent(targetPath, rules, recursive, excludeGlob, opts)
+			} else {
+				results, err = replace.ReplaceInDirectoryWithResultsAndExclude(targetPath, rules, recursive, excludeGlob)
+			}
 			if err != nil {
 				return fmt.Errorf("failed to process directory: %w", err)
 			}
@@ -261,6 +281,8 @@ func init() {
 	replaceCmd.Flags().BoolVar(&backup, "backup", false, "Create backup files before modification")
 	replaceCmd.Flags().BoolVar(&recursive, "recursive", true, "Process subdirectories recursively")
 	replaceCmd.Flags().StringVar(&excludeGlob, "exclude", "", "Glob pattern for files to exclude")
+	replaceCmd.Flags().BoolVar(&concurrent, "concurrent", false, "Process files concurrently for better performance")
+	replaceCmd.Flags().IntVar(&maxWorkers, "max-workers", 0, "Maximum number of concurrent workers (default: number of CPUs)")
 
 	replaceCmd.MarkFlagRequired("rules")
 	replaceCmd.MarkFlagRequired("path")
