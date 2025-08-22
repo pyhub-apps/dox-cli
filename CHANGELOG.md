@@ -5,6 +5,56 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [HeadVer](https://github.com/line/headver) versioning.
 
+## [v1.2534.28] - 2025-08-22
+
+### 🎉 Major Features
+
+#### AI-Powered Content Generation (#15)
+- **New `generate` command** with OpenAI API integration
+- **Multiple content types**: blog, report, summary, code, custom
+- **Model selection**: Support for GPT-3.5-turbo and GPT-4
+- **Configurable parameters**: Temperature and max tokens control
+- **Smart prompt enhancement** based on content type
+- **Flexible API key configuration**: Environment variable or CLI flag
+
+### ⚡ Performance Improvements
+
+#### Concurrent Document Processing
+- **Multi-threaded processing** for bulk operations
+- **Worker pool pattern** with configurable concurrency (`--concurrent`, `--max-workers`)
+- **Progress indicators** for long-running operations
+- **40-70% performance improvement** on multi-file operations
+
+### 🛠️ Quality Improvements
+
+#### Enhanced Error Handling
+- **Custom error types** with error chain support
+- **Four error categories**: FileError, DocumentError, ValidationError, ConfigError
+- **User-friendly messages** with actionable feedback
+- **Full support** for errors.Is/As patterns
+- **Verbose logging** with `--verbose` flag
+
+### 🔧 Technical Improvements
+- **Exclude pattern support** for directory processing (`--exclude`)
+- **Improved test coverage** across all modules
+- **Better i18n support** with enhanced error messages
+- **Force flag** for overwriting existing files
+
+### 🐛 Bug Fixes
+- Fixed i18n test failures related to locale path resolution
+- Corrected import errors in error handling modules
+- Resolved unused variable warnings
+
+### 📦 Installation
+Binary releases available for Windows, macOS (Intel/ARM), and Linux.
+
+```bash
+# Quick install (macOS/Linux)
+curl -L https://github.com/pyhub-kr/pyhub-docs/releases/latest/download/pyhub-docs-$(uname -s | tr '[:upper:]' '[:lower:]')-$(uname -m | sed 's/x86_64/amd64/') -o pyhub-docs
+chmod +x pyhub-docs
+sudo mv pyhub-docs /usr/local/bin/
+```
+
 ## [v1.2534.0] - 2025-08-21
 
 ### 🚀 Major Release with Template Support
@@ -144,5 +194,6 @@ Previous versions (v0.x.x) used Semantic Versioning.
 
 ---
 
+[v1.2534.28]: https://github.com/pyhub-kr/pyhub-docs/releases/tag/v1.2534.28
 [v1.2534.0]: https://github.com/pyhub-kr/pyhub-docs/releases/tag/v1.2534.0
 [0.1.0]: https://github.com/pyhub-kr/pyhub-docs/releases/tag/v0.1.0
