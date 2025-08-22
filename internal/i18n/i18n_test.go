@@ -97,7 +97,7 @@ func TestDetermineLanguage(t *testing.T) {
 
 func TestInitWithFiles(t *testing.T) {
 	// Test initializing with locale files from directory
-	err := InitWithFiles("../../locales", "")
+	err := InitWithFiles("locales", "")
 	if err != nil {
 		t.Fatalf("InitWithFiles failed: %v", err)
 	}
@@ -110,7 +110,7 @@ func TestInitWithFiles(t *testing.T) {
 
 func TestTranslation(t *testing.T) {
 	// Initialize with test locale files
-	err := InitWithFiles("../../locales", "en")
+	err := InitWithFiles("locales", "en")
 	if err != nil {
 		t.Fatalf("InitWithFiles failed: %v", err)
 	}
@@ -138,7 +138,7 @@ func TestTranslation(t *testing.T) {
 
 func TestSetLanguage(t *testing.T) {
 	// Initialize first
-	err := InitWithFiles("../../locales", "en")
+	err := InitWithFiles("locales", "en")
 	if err != nil {
 		t.Fatalf("InitWithFiles failed: %v", err)
 	}

@@ -34,16 +34,16 @@ The rules file should contain replacement pairs:
 
 Examples:
   # Replace text in a single file
-  pyhub-documents-cli replace --rules rules.yml --path document.docx
+  pyhub-docs replace --rules rules.yml --path document.docx
 
   # Replace text in all documents in a directory
-  pyhub-documents-cli replace --rules rules.yml --path ./docs
+  pyhub-docs replace --rules rules.yml --path ./docs
 
   # Dry run to preview changes
-  pyhub-documents-cli replace --rules rules.yml --path ./docs --dry-run
+  pyhub-docs replace --rules rules.yml --path ./docs --dry-run
 
   # Create backups before modifying
-  pyhub-documents-cli replace --rules rules.yml --path ./docs --backup`,
+  pyhub-docs replace --rules rules.yml --path ./docs --backup`,
 	RunE: func(cmd *cobra.Command, args []string) error {
 		// Load rules from YAML file
 		rules, err := replace.LoadRulesFromFile(rulesFile)
@@ -85,7 +85,7 @@ Examples:
 				return previewDirectoryReplacements(targetPath, rules, recursive)
 			}
 			
-			results, err := replace.ReplaceInDirectoryWithResults(targetPath, rules, recursive)
+			results, err := replace.ReplaceInDirectoryWithResultsAndExclude(targetPath, rules, recursive, excludeGlob)
 			if err != nil {
 				return fmt.Errorf("failed to process directory: %w", err)
 			}
@@ -173,8 +173,8 @@ func previewDirectoryReplacements(dirPath string, rules []replace.Rule, recursiv
 	fmt.Println("Files that would be processed:")
 	
 	count := 0
-	// Reuse the walkDocxFiles logic by creating a temporary callback
-	err := replace.WalkDocxFiles(dirPath, recursive, func(path string) error {
+	// Use the new walk function with exclude support
+	err := replace.WalkDocumentFilesWithExclude(dirPath, recursive, excludeGlob, func(path string) error {
 		fmt.Printf("  - %s\n", path)
 		count++
 		return nil

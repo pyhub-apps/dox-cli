@@ -19,9 +19,10 @@
 
   "flag.rules": "교체 규칙이 포함된 YAML 파일",
   "flag.path": "처리할 파일 또는 디렉토리 경로",
-  "flag.dryrun": "실제 변경 없이 변경될 내용 표시",
+  "flag.dryrun": "실제 변경 없이 변경될 내용만 표시",
   "flag.backup": "파일 수정 전 백업 생성",
-  "flag.recursive": "하위 디렉토리를 재귀적으로 처리",
+  "flag.recursive": "하위 디렉토리까지 재귀적으로 처리",
+  "flag.exclude": "제외할 파일의 glob 패턴",
   "flag.from": "입력 마크다운 파일",
   "flag.template": "템플릿 문서 파일",
   "flag.output": "출력 파일 경로",

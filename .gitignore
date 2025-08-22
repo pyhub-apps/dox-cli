@@ -49,3 +49,10 @@ config.local.yml
 *.tmp
 temp/
 tmp/
+
+# Test files and documents
+test-docs/
+*.docx
+*.pptx
+*.pdf
+*.hwp

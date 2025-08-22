@@ -82,17 +82,22 @@ func ReplaceInDocumentWithCount(docPath string, rules []Rule) (int, error) {
 // WalkDocumentFiles walks through .docx and .pptx files in a directory and calls the callback for each file
 func WalkDocumentFiles(dirPath string, recursive bool, callback func(string) error) error {
 	// Keep WalkDocxFiles for backward compatibility
-	return walkDocumentFiles(dirPath, recursive, callback, ".docx", ".pptx")
+	return WalkDocumentFilesWithExclude(dirPath, recursive, "", callback)
+}
+
+// WalkDocumentFilesWithExclude walks through .docx and .pptx files with exclude pattern support
+func WalkDocumentFilesWithExclude(dirPath string, recursive bool, excludePattern string, callback func(string) error) error {
+	return walkDocumentFiles(dirPath, recursive, excludePattern, callback, ".docx", ".pptx")
 }
 
 // WalkDocxFiles walks through .docx files in a directory and calls the callback for each file
 // Deprecated: Use WalkDocumentFiles instead
 func WalkDocxFiles(dirPath string, recursive bool, callback func(string) error) error {
-	return walkDocumentFiles(dirPath, recursive, callback, ".docx")
+	return walkDocumentFiles(dirPath, recursive, "", callback, ".docx")
 }
 
 // walkDocumentFiles is the internal implementation that accepts multiple extensions
-func walkDocumentFiles(dirPath string, recursive bool, callback func(string) error, extensions ...string) error {
+func walkDocumentFiles(dirPath string, recursive bool, excludePattern string, callback func(string) error, extensions ...string) error {
 	if recursive {
 		return filepath.Walk(dirPath, func(path string, info os.FileInfo, err error) error {
 			if err != nil {
@@ -102,6 +107,14 @@ func walkDocumentFiles(dirPath string, recursive bool, callback func(string) err
 			// Skip directories
 			if info.IsDir() {
 				return nil
+			}
+
+			// Check if file should be excluded
+			if excludePattern != "" {
+				matched, err := filepath.Match(excludePattern, filepath.Base(path))
+				if err == nil && matched {
+					return nil // Skip excluded files
+				}
 			}
 
 			// Process files with specified extensions
@@ -125,6 +138,14 @@ func walkDocumentFiles(dirPath string, recursive bool, callback func(string) err
 			// Skip directories
 			if entry.IsDir() {
 				continue
+			}
+
+			// Check if file should be excluded
+			if excludePattern != "" {
+				matched, err := filepath.Match(excludePattern, entry.Name())
+				if err == nil && matched {
+					continue // Skip excluded files
+				}
 			}
 
 			// Process files with specified extensions
@@ -212,6 +233,11 @@ type ReplaceResult struct {
 
 // ReplaceInDirectoryWithResults applies replacement rules and returns detailed results
 func ReplaceInDirectoryWithResults(dirPath string, rules []Rule, recursive bool) ([]ReplaceResult, error) {
+	return ReplaceInDirectoryWithResultsAndExclude(dirPath, rules, recursive, "")
+}
+
+// ReplaceInDirectoryWithResultsAndExclude applies replacement rules with exclude pattern support
+func ReplaceInDirectoryWithResultsAndExclude(dirPath string, rules []Rule, recursive bool, excludePattern string) ([]ReplaceResult, error) {
 	var results []ReplaceResult
 
 	// Validate input
@@ -241,7 +267,7 @@ func ReplaceInDirectoryWithResults(dirPath string, rules []Rule, recursive bool)
 	}
 
 	// Process documents in the directory
-	err = WalkDocumentFiles(dirPath, recursive, func(path string) error {
+	err = WalkDocumentFilesWithExclude(dirPath, recursive, excludePattern, func(path string) error {
 		result := ReplaceResult{
 			FilePath: path,
 		}
