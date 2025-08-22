@@ -10,6 +10,7 @@ import (
 	pkgErrors "github.com/pyhub/pyhub-docs/internal/errors"
 	"github.com/pyhub/pyhub-docs/internal/i18n"
 	"github.com/pyhub/pyhub-docs/internal/markdown"
+	"github.com/pyhub/pyhub-docs/internal/ui"
 	"github.com/spf13/cobra"
 )
 
@@ -114,12 +115,11 @@ func runCreate(cmd *cobra.Command, args []string) error {
 		return pkgErrors.NewValidationError("format", outputFormat, "must be 'docx' or 'pptx'")
 	}
 
-	// Check if template is specified (not yet implemented)
+	// Check if template is specified
 	if templateFile != "" {
 		if verbose {
-			fmt.Printf("Using template: %s\n", templateFile)
+			ui.PrintInfo("Using template: %s", templateFile)
 		}
-		// Template functionality is already implemented, remove warning
 	}
 
 	// Create appropriate converter
@@ -127,27 +127,36 @@ func runCreate(cmd *cobra.Command, args []string) error {
 	switch outputFormat {
 	case "docx":
 		converter = markdown.NewWordConverter()
-		cmd.Printf("%s\n", i18n.T(i18n.MsgProgressConverting, map[string]interface{}{
-			"Source": fromFile,
-			"Type":   "Word",
-		}))
+		if !quiet {
+			ui.PrintInfo("Converting %s to Word document...", fromFile)
+		}
 	case "pptx":
 		converter = markdown.NewPowerPointConverter()
-		cmd.Printf("%s\n", i18n.T(i18n.MsgProgressConverting, map[string]interface{}{
-			"Source": fromFile,
-			"Type":   "PowerPoint",
-		}))
+		if !quiet {
+			ui.PrintInfo("Converting %s to PowerPoint presentation...", fromFile)
+		}
 	}
 
-	// Perform conversion
+	// Perform conversion with spinner
+	var spinner *ui.ProgressBar
+	if !quiet {
+		spinner = ui.NewSpinner("Processing...")
+	}
+	
 	if err := markdown.ConvertFile(fromFile, converter, outputFile); err != nil {
+		if spinner != nil {
+			spinner.Clear()
+		}
+		ui.PrintError("Conversion failed: %v", err)
 		return fmt.Errorf("%s", i18n.T(i18n.MsgErrorConversion, map[string]interface{}{
 			"Error": err.Error(),
 		}))
 	}
-
-	cmd.Printf("%s\n", i18n.T(i18n.MsgSuccessCreated, map[string]interface{}{
-		"File": outputFile,
-	}))
+	
+	if spinner != nil {
+		spinner.Finish()
+	}
+	
+	ui.PrintSuccess("Document created: %s", outputFile)
 	return nil
 }

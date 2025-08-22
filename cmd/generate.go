@@ -8,6 +8,7 @@ import (
 	pkgErrors "github.com/pyhub/pyhub-docs/internal/errors"
 	"github.com/pyhub/pyhub-docs/internal/generate"
 	"github.com/pyhub/pyhub-docs/internal/openai"
+	"github.com/pyhub/pyhub-docs/internal/ui"
 	"github.com/spf13/cobra"
 )
 
@@ -112,7 +113,7 @@ func runGenerate(cmd *cobra.Command, args []string) error {
 
 	// Create generator with API key
 	if verbose {
-		fmt.Println("Initializing OpenAI client...")
+		ui.PrintInfo("Initializing OpenAI client...")
 	}
 	
 	generator, err := generate.NewGenerator(apiKey)
@@ -127,8 +128,8 @@ func runGenerate(cmd *cobra.Command, args []string) error {
 	enhancedPrompt := generate.EnhancePrompt(prompt, contentType)
 	
 	if verbose {
-		fmt.Printf("Generating %s content with model %s...\n", contentType, model)
-		fmt.Printf("Temperature: %.2f, Max tokens: %d\n", temperature, maxTokens)
+		ui.PrintInfo("Generating %s content with model %s...", contentType, model)
+		ui.PrintInfo("Temperature: %.2f, Max tokens: %d", temperature, maxTokens)
 	}
 
 	// Set generation options
@@ -141,7 +142,8 @@ func runGenerate(cmd *cobra.Command, args []string) error {
 
 	// Generate content
 	if !quiet {
-		fmt.Printf("Generating %s content...\n", contentType)
+		spinner := ui.NewSpinner(fmt.Sprintf("Generating %s content...", contentType))
+		defer spinner.Finish()
 	}
 	
 	content, err := generator.GenerateContent(enhancedPrompt, options)
@@ -170,7 +172,7 @@ func runGenerate(cmd *cobra.Command, args []string) error {
 		}
 		
 		if !quiet {
-			fmt.Printf("Content saved to: %s\n", genOutput)
+			ui.PrintSuccess("Content saved to: %s", genOutput)
 		}
 	} else {
 		// Print to stdout if no output file specified
@@ -180,7 +182,7 @@ func runGenerate(cmd *cobra.Command, args []string) error {
 	}
 
 	if verbose {
-		fmt.Println("Generation completed successfully!")
+		ui.PrintSuccess("Generation completed successfully!")
 	}
 
 	return nil

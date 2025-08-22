@@ -5,6 +5,8 @@ import (
 	"runtime"
 	"sync"
 	"sync/atomic"
+
+	"github.com/pyhub/pyhub-docs/internal/ui"
 )
 
 // ConcurrentOptions configures concurrent processing
@@ -50,6 +52,12 @@ func ReplaceInDirectoryConcurrent(dirPath string, rules []Rule, recursive bool, 
 		opts.MaxWorkers = 1
 	}
 	
+	// Create progress bar if needed
+	var progressBar *ui.ProgressBar
+	if opts.ShowProgress {
+		progressBar = ui.NewProgressBar(len(files), "Processing documents")
+	}
+	
 	// Use buffered channel as semaphore for limiting workers
 	sem := make(chan struct{}, opts.MaxWorkers)
 	
@@ -84,15 +92,21 @@ func ReplaceInDirectoryConcurrent(dirPath string, rules []Rule, recursive bool, 
 			results[idx] = result
 			
 			// Update progress
-			if opts.ShowProgress {
+			if opts.ShowProgress && progressBar != nil {
+				progressBar.Increment()
 				current := atomic.AddInt32(&processed, 1)
-				printProgress(int(current), len(files))
+				_ = current // Progress bar handles display
 			}
 		}(i, file)
 	}
 	
 	// Wait for all workers to complete
 	wg.Wait()
+	
+	// Finish progress bar
+	if progressBar != nil {
+		progressBar.Finish()
+	}
 	
 	return results, nil
 }

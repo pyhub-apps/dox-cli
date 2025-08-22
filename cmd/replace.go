@@ -10,6 +10,7 @@ import (
 
 	pkgErrors "github.com/pyhub/pyhub-docs/internal/errors"
 	"github.com/pyhub/pyhub-docs/internal/replace"
+	"github.com/pyhub/pyhub-docs/internal/ui"
 	"github.com/spf13/cobra"
 )
 
@@ -67,17 +68,16 @@ Examples:
 		}
 
 		if len(rules) == 0 {
-			fmt.Println("No replacement rules found in the file")
+			ui.PrintWarning("No replacement rules found in the file")
 			return nil
 		}
 
 		// Print rules if in dry-run mode
 		if dryRun {
-			fmt.Println("Replacement rules to be applied:")
+			ui.PrintHeader("Replacement Rules to Apply")
 			for i, rule := range rules {
-				fmt.Printf("  %d. Replace '%s' with '%s'\n", i+1, rule.Old, rule.New)
+				ui.PrintStep(i+1, len(rules), fmt.Sprintf("Replace '%s' with '%s'", rule.Old, rule.New))
 			}
-			fmt.Println()
 		}
 
 		// Check if target is a file or directory
@@ -94,14 +94,14 @@ Examples:
 
 		// Create backup if requested
 		if backup && !dryRun {
-			if verbose {
-				fmt.Printf("Creating backup of %s...\n", targetPath)
+			if !quiet {
+				ui.PrintInfo("Creating backup of %s...", targetPath)
 			}
 			if err := createBackup(targetPath, info.IsDir()); err != nil {
 				return pkgErrors.NewFileError(targetPath, "creating backup", err)
 			}
-			if verbose {
-				fmt.Println("Backup created successfully")
+			if !quiet {
+				ui.PrintSuccess("Backup created successfully")
 			}
 		}
 
@@ -124,7 +124,7 @@ Examples:
 				opts.ShowProgress = !quiet && !verbose
 				
 				if verbose {
-					fmt.Printf("Processing directory with %d workers...\n", opts.MaxWorkers)
+					ui.PrintInfo("Processing directory with %d workers...", opts.MaxWorkers)
 				}
 				
 				results, err = replace.ReplaceInDirectoryConcurrent(targetPath, rules, recursive, excludeGlob, opts)
@@ -145,12 +145,12 @@ Examples:
 			}
 
 			if dryRun {
-				fmt.Printf("Would process file: %s\n", targetPath)
+				ui.PrintInfo("Would process file: %s", targetPath)
 				return nil
 			}
 
 			if verbose {
-				fmt.Printf("Processing file: %s\n", targetPath)
+				ui.PrintInfo("Processing file: %s", targetPath)
 			}
 			
 			count, err := replace.ReplaceInDocumentWithCount(targetPath, rules)
@@ -162,10 +162,10 @@ Examples:
 			}
 			
 			if verbose {
-				fmt.Printf("Made %d replacements in %s\n", count, targetPath)
+				ui.PrintInfo("Made %d replacements in %s", count, targetPath)
 			}
 
-			fmt.Printf("Successfully processed: %s\n", targetPath)
+			ui.PrintSuccess("Successfully processed: %s", targetPath)
 		}
 
 		return nil
@@ -228,12 +228,13 @@ func copyDir(src, dst string) error {
 }
 
 func previewDirectoryReplacements(dirPath string, rules []replace.Rule, recursive bool) error {
-	fmt.Println("Files that would be processed:")
+	ui.PrintHeader("Files to Process")
 	
 	count := 0
 	// Use the new walk function with exclude support
 	err := replace.WalkDocumentFilesWithExclude(dirPath, recursive, excludeGlob, func(path string) error {
-		fmt.Printf("  - %s\n", path)
+		ext := strings.ToLower(filepath.Ext(path))
+		ui.PrintFileOperation("Preview", path, ext)
 		count++
 		return nil
 	})
@@ -242,7 +243,7 @@ func previewDirectoryReplacements(dirPath string, rules []replace.Rule, recursiv
 		return err
 	}
 	
-	fmt.Printf("\nTotal files to process: %d\n", count)
+	ui.PrintInfo("Total files to process: %d", count)
 	return nil
 }
 
@@ -251,25 +252,28 @@ func printResults(results []replace.ReplaceResult) {
 	failureCount := 0
 	totalReplacements := 0
 	
-	fmt.Println("\nProcessing results:")
-	fmt.Println("-------------------")
+	ui.PrintHeader("Processing Results")
 	
 	for _, result := range results {
 		if result.Success {
-			fmt.Printf("✓ %s - Success (%d replacements)\n", result.FilePath, result.Replacements)
+			ui.PrintSuccess("%s (%d replacements)", result.FilePath, result.Replacements)
 			successCount++
 			totalReplacements += result.Replacements
 		} else {
-			fmt.Printf("✗ %s - Failed: %v\n", result.FilePath, result.Error)
+			ui.PrintError("%s - %v", result.FilePath, result.Error)
 			failureCount++
 		}
 	}
 	
-	fmt.Println("\nSummary:")
-	fmt.Printf("  Successful: %d\n", successCount)
-	fmt.Printf("  Failed: %d\n", failureCount)
-	fmt.Printf("  Total files: %d\n", len(results))
-	fmt.Printf("  Total replacements: %d\n", totalReplacements)
+	// Create summary statistics
+	stats := map[string]interface{}{
+		"Successful":          successCount,
+		"Failed":             failureCount,
+		"Total Files":        len(results),
+		"Total Replacements": totalReplacements,
+	}
+	
+	ui.PrintSummary("Summary", stats)
 }
 
 func init() {

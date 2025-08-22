@@ -55,7 +55,8 @@
       "Bash(./pyhub-docs config --list)",
       "Bash(./pyhub-docs config:*)",
       "Bash(./dox version)",
-      "Bash(./dox --help)"
+      "Bash(./dox --help)",
+      "Bash(./dox replace:*)"
     ],
     "deny": [],
     "ask": []

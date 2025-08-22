@@ -7,6 +7,7 @@ import (
 
 	"github.com/pyhub/pyhub-docs/internal/config"
 	"github.com/pyhub/pyhub-docs/internal/i18n"
+	"github.com/pyhub/pyhub-docs/internal/ui"
 	"github.com/spf13/cobra"
 )
 
@@ -16,6 +17,7 @@ var (
 	verbose  bool
 	quiet    bool
 	langFlag string
+	noColor  bool
 	
 	// Global configuration instance
 	appConfig *config.Config
@@ -54,13 +56,14 @@ func Execute() {
 }
 
 func init() {
-	cobra.OnInitialize(initConfig, initI18n)
+	cobra.OnInitialize(initConfig, initI18n, initUI)
 
 	// Global flags
 	rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is $HOME/.pyhub/config.yml)")
 	rootCmd.PersistentFlags().BoolVarP(&verbose, "verbose", "v", false, "verbose output")
 	rootCmd.PersistentFlags().BoolVarP(&quiet, "quiet", "q", false, "suppress non-error output")
 	rootCmd.PersistentFlags().StringVar(&langFlag, "lang", "", i18n.T(i18n.MsgFlagLang))
+	rootCmd.PersistentFlags().BoolVar(&noColor, "no-color", false, "disable colored output")
 
 	// Version template
 	rootCmd.SetVersionTemplate(fmt.Sprintf(`{{with .Name}}{{printf "%%s version information:\n" .}}{{end}}
@@ -127,4 +130,14 @@ func initI18n() {
 	// Update command descriptions after i18n is initialized
 	rootCmd.Short = i18n.T(i18n.MsgCmdRootShort)
 	rootCmd.Long = i18n.T(i18n.MsgCmdRootLong)
+}
+
+// initUI initializes the UI settings
+func initUI() {
+	// Handle color output settings
+	if noColor || os.Getenv("NO_COLOR") != "" {
+		ui.DisableColor()
+	} else if os.Getenv("FORCE_COLOR") != "" {
+		ui.EnableColor()
+	}
 }
