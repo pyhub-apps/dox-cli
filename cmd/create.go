@@ -1,11 +1,13 @@
 package cmd
 
 import (
+	"errors"
 	"fmt"
 	"os"
 	"path/filepath"
 	"strings"
 
+	pkgErrors "github.com/pyhub/pyhub-docs/internal/errors"
 	"github.com/pyhub/pyhub-docs/internal/i18n"
 	"github.com/pyhub/pyhub-docs/internal/markdown"
 	"github.com/spf13/cobra"
@@ -65,20 +67,29 @@ func init() {
 }
 
 func runCreate(cmd *cobra.Command, args []string) error {
+	// Validate inputs
+	if fromFile == "" {
+		return pkgErrors.NewValidationError("from", fromFile, "input file is required")
+	}
+	if outputFile == "" {
+		return pkgErrors.NewValidationError("output", outputFile, "output file is required")
+	}
+
 	// Check if input file exists
-	if _, err := os.Stat(fromFile); os.IsNotExist(err) {
-		return fmt.Errorf("%s", i18n.T(i18n.MsgErrorFileNotFound, map[string]interface{}{
-			"Type": "Input",
-			"Path": fromFile,
-		}))
+	if _, err := os.Stat(fromFile); err != nil {
+		if errors.Is(err, os.ErrNotExist) {
+			return pkgErrors.NewFileError(fromFile, "reading input", pkgErrors.ErrFileNotFound)
+		}
+		if errors.Is(err, os.ErrPermission) {
+			return pkgErrors.NewFileError(fromFile, "reading input", pkgErrors.ErrPermissionDenied)
+		}
+		return pkgErrors.NewFileError(fromFile, "reading input", err)
 	}
 
 	// Check if output file exists and force flag is not set
 	if !force {
 		if _, err := os.Stat(outputFile); err == nil {
-			return fmt.Errorf("%s", i18n.T(i18n.MsgErrorFileExists, map[string]interface{}{
-				"Path": outputFile,
-			}))
+			return pkgErrors.NewFileError(outputFile, "creating", fmt.Errorf("%w: use --force to overwrite", pkgErrors.ErrFileAlreadyExists))
 		}
 	}
 
@@ -93,27 +104,22 @@ func runCreate(cmd *cobra.Command, args []string) error {
 		case ".pptx":
 			outputFormat = "pptx"
 		default:
-			return fmt.Errorf("%s", i18n.T(i18n.MsgErrorInvalidFormat, map[string]interface{}{
-				"Type":     "extension",
-				"Value":    ext,
-				"Expected": "--format",
-			}))
+			return pkgErrors.NewDocumentError(outputFile, ext, "unsupported format (use .docx or .pptx)", pkgErrors.ErrUnsupportedFormat)
 		}
 	}
 
 	// Validate format
 	outputFormat = strings.ToLower(outputFormat)
 	if outputFormat != "docx" && outputFormat != "pptx" {
-		return fmt.Errorf("%s", i18n.T(i18n.MsgErrorUnsupported, map[string]interface{}{
-			"Type":      "format",
-			"Value":     outputFormat,
-			"Supported": "docx, pptx",
-		}))
+		return pkgErrors.NewValidationError("format", outputFormat, "must be 'docx' or 'pptx'")
 	}
 
 	// Check if template is specified (not yet implemented)
 	if templateFile != "" {
-		cmd.PrintErrf("%s\n", i18n.T(i18n.MsgWarningTemplate))
+		if verbose {
+			fmt.Printf("Using template: %s\n", templateFile)
+		}
+		// Template functionality is already implemented, remove warning
 	}
 
 	// Create appropriate converter

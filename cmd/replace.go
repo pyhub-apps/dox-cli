@@ -1,12 +1,14 @@
 package cmd
 
 import (
+	"errors"
 	"fmt"
 	"os"
 	"path/filepath"
 	"strings"
 	"time"
 
+	pkgErrors "github.com/pyhub/pyhub-docs/internal/errors"
 	"github.com/pyhub/pyhub-docs/internal/replace"
 	"github.com/spf13/cobra"
 )
@@ -45,10 +47,21 @@ Examples:
   # Create backups before modifying
   pyhub-docs replace --rules rules.yml --path ./docs --backup`,
 	RunE: func(cmd *cobra.Command, args []string) error {
+		// Validate inputs
+		if rulesFile == "" {
+			return pkgErrors.NewValidationError("rules", rulesFile, "rules file is required")
+		}
+		if targetPath == "" {
+			return pkgErrors.NewValidationError("path", targetPath, "target path is required")
+		}
+
 		// Load rules from YAML file
 		rules, err := replace.LoadRulesFromFile(rulesFile)
 		if err != nil {
-			return fmt.Errorf("failed to load rules: %w", err)
+			if errors.Is(err, os.ErrNotExist) {
+				return pkgErrors.NewFileError(rulesFile, "loading rules", pkgErrors.ErrFileNotFound)
+			}
+			return pkgErrors.NewFileError(rulesFile, "loading rules", err)
 		}
 
 		if len(rules) == 0 {
@@ -68,13 +81,25 @@ Examples:
 		// Check if target is a file or directory
 		info, err := os.Stat(targetPath)
 		if err != nil {
-			return fmt.Errorf("failed to access target path: %w", err)
+			if errors.Is(err, os.ErrNotExist) {
+				return pkgErrors.NewFileError(targetPath, "accessing", pkgErrors.ErrFileNotFound)
+			}
+			if errors.Is(err, os.ErrPermission) {
+				return pkgErrors.NewFileError(targetPath, "accessing", pkgErrors.ErrPermissionDenied)
+			}
+			return pkgErrors.NewFileError(targetPath, "accessing", err)
 		}
 
 		// Create backup if requested
 		if backup && !dryRun {
+			if verbose {
+				fmt.Printf("Creating backup of %s...\n", targetPath)
+			}
 			if err := createBackup(targetPath, info.IsDir()); err != nil {
-				return fmt.Errorf("failed to create backup: %w", err)
+				return pkgErrors.NewFileError(targetPath, "creating backup", err)
+			}
+			if verbose {
+				fmt.Println("Backup created successfully")
 			}
 		}
 
@@ -94,8 +119,9 @@ Examples:
 			printResults(results)
 		} else {
 			// Process single file
-			if !strings.HasSuffix(strings.ToLower(targetPath), ".docx") {
-				return fmt.Errorf("only .docx files are currently supported")
+			ext := strings.ToLower(filepath.Ext(targetPath))
+			if ext != ".docx" && ext != ".pptx" {
+				return pkgErrors.NewDocumentError(targetPath, ext, "unsupported format (only .docx and .pptx are supported)", pkgErrors.ErrUnsupportedFormat)
 			}
 
 			if dryRun {
@@ -103,8 +129,20 @@ Examples:
 				return nil
 			}
 
-			if err := replace.ReplaceInDocument(targetPath, rules); err != nil {
-				return fmt.Errorf("failed to process document: %w", err)
+			if verbose {
+				fmt.Printf("Processing file: %s\n", targetPath)
+			}
+			
+			count, err := replace.ReplaceInDocumentWithCount(targetPath, rules)
+			if err != nil {
+				if errors.Is(err, pkgErrors.ErrDocumentCorrupted) {
+					return pkgErrors.NewDocumentError(targetPath, ext, "document appears to be corrupted", err)
+				}
+				return pkgErrors.NewDocumentError(targetPath, ext, "processing failed", err)
+			}
+			
+			if verbose {
+				fmt.Printf("Made %d replacements in %s\n", count, targetPath)
 			}
 
 			fmt.Printf("Successfully processed: %s\n", targetPath)

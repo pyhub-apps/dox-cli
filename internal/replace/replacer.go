@@ -1,12 +1,14 @@
 package replace
 
 import (
+	"errors"
 	"fmt"
 	"os"
 	"path/filepath"
 	"strings"
 
 	"github.com/pyhub/pyhub-docs/internal/document"
+	pkgErrors "github.com/pyhub/pyhub-docs/internal/errors"
 )
 
 // ReplaceInDocument applies replacement rules to a single Word or PowerPoint document
@@ -19,12 +21,18 @@ func ReplaceInDocument(docPath string, rules []Rule) error {
 func ReplaceInDocumentWithCount(docPath string, rules []Rule) (int, error) {
 	// Validate input
 	if docPath == "" {
-		return 0, fmt.Errorf("document path cannot be empty")
+		return 0, pkgErrors.NewValidationError("path", docPath, "document path cannot be empty")
 	}
 
 	// Check if file exists
-	if _, err := os.Stat(docPath); os.IsNotExist(err) {
-		return 0, fmt.Errorf("document not found: %s", docPath)
+	if _, err := os.Stat(docPath); err != nil {
+		if errors.Is(err, os.ErrNotExist) {
+			return 0, pkgErrors.NewFileError(docPath, "opening document", pkgErrors.ErrFileNotFound)
+		}
+		if errors.Is(err, os.ErrPermission) {
+			return 0, pkgErrors.NewFileError(docPath, "opening document", pkgErrors.ErrPermissionDenied)
+		}
+		return 0, pkgErrors.NewFileError(docPath, "opening document", err)
 	}
 
 	// Skip if no rules to apply
@@ -49,11 +57,16 @@ func ReplaceInDocumentWithCount(docPath string, rules []Rule) (int, error) {
 	} else if strings.HasSuffix(lowerPath, ".pptx") {
 		doc, err = document.OpenPowerPointDocument(docPath)
 	} else {
-		return 0, fmt.Errorf("unsupported document type: %s (only .docx and .pptx are supported)", docPath)
+		ext := filepath.Ext(docPath)
+		return 0, pkgErrors.NewDocumentError(docPath, ext, "unsupported format (only .docx and .pptx)", pkgErrors.ErrUnsupportedFormat)
 	}
 	
 	if err != nil {
-		return 0, fmt.Errorf("failed to open document: %w", err)
+		// Check if document is corrupted
+		if strings.Contains(err.Error(), "corrupted") || strings.Contains(err.Error(), "invalid") {
+			return 0, pkgErrors.NewDocumentError(docPath, filepath.Ext(docPath), "document appears to be corrupted", pkgErrors.ErrDocumentCorrupted)
+		}
+		return 0, pkgErrors.NewDocumentError(docPath, filepath.Ext(docPath), "failed to open document", err)
 	}
 	defer doc.Close()
 
