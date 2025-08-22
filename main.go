@@ -1,7 +1,7 @@
 package main
 
 import (
-	"github.com/pyhub/pyhub-documents-cli/cmd"
+	"github.com/pyhub/pyhub-docs/cmd"
 )
 
 // Version information (set by ldflags during build)

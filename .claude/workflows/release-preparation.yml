@@ -176,24 +176,24 @@ release_checklist:
 platform_matrix:
   windows:
     - arch: amd64
-      output: pyhub-documents-cli.exe
+      output: pyhub-docs.exe
       test: Windows 10/11 VM
       priority: 1
     
   darwin:
     - arch: amd64
-      output: pyhub-documents-cli-darwin-amd64
+      output: pyhub-docs-darwin-amd64
       test: Intel Mac
       priority: 2
     
     - arch: arm64
-      output: pyhub-documents-cli-darwin-arm64
+      output: pyhub-docs-darwin-arm64
       test: M1/M2 Mac
       priority: 2
   
   linux:
     - arch: amd64
-      output: pyhub-documents-cli-linux-amd64
+      output: pyhub-docs-linux-amd64
       test: Ubuntu 20.04/22.04
       priority: 3
 

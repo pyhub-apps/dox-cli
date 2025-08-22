@@ -18,8 +18,8 @@ vendor/
 go.work
 
 # Build output
-pyhub-documents-cli
-pyhub-documents-cli-*
+pyhub-docs
+pyhub-docs-*
 dist/
 
 # IDE specific files

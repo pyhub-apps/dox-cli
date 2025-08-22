@@ -1,6 +1,6 @@
-# Contributing to pyhub-documents-cli
+# Contributing to pyhub-docs
 
-Thank you for your interest in contributing to pyhub-documents-cli! This document provides guidelines and instructions for contributing.
+Thank you for your interest in contributing to pyhub-docs! This document provides guidelines and instructions for contributing.
 
 ## 🎯 Development Philosophy
 
@@ -21,8 +21,8 @@ We follow **Test-Driven Development (TDD)**:
 
 ```bash
 # Fork and clone the repository
-git clone https://github.com/YOUR_USERNAME/pyhub-documents-cli.git
-cd pyhub-documents-cli
+git clone https://github.com/YOUR_USERNAME/pyhub-docs.git
+cd pyhub-docs
 
 # Install dependencies
 go mod download
@@ -36,7 +36,7 @@ make test
 ### 1. Check or Create an Issue
 
 Before starting work:
-- Check existing [issues](https://github.com/pyhub/pyhub-documents-cli/issues)
+- Check existing [issues](https://github.com/pyhub/pyhub-docs/issues)
 - If none exists, create a new issue describing what you want to work on
 - Wait for maintainer feedback/approval for significant changes
 
@@ -254,7 +254,7 @@ Feature suggestions should include:
 ## 📊 Project Structure
 
 ```
-pyhub-documents-cli/
+pyhub-docs/
 ├── cmd/            # CLI commands
 │   ├── root.go
 │   ├── replace.go
@@ -289,4 +289,4 @@ By contributing, you agree that your contributions will be licensed under the MI
 - Use discussions for questions
 - Check existing issues/PRs first
 
-Thank you for contributing to pyhub-documents-cli! 🚀
+Thank you for contributing to pyhub-docs! 🚀

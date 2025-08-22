@@ -1,6 +1,6 @@
 {
   "cmd.root.short": "문서 자동화 및 AI 기반 콘텐츠 생성 CLI",
-  "cmd.root.long": "pyhub-documents-cli는 강력한 문서 자동화 CLI 도구입니다.\n문서 편집 및 콘텐츠 생성 작업을 자동화합니다.",
+  "cmd.root.long": "pyhub-docs는 강력한 문서 자동화 CLI 도구입니다.\n문서 편집 및 콘텐츠 생성 작업을 자동화합니다.",
   
   "cmd.replace.short": "YAML 파일의 규칙을 사용하여 문서의 텍스트 교체",
   "cmd.replace.long": "YAML 파일에 정의된 규칙에 따라 Word 및 PowerPoint 문서의 텍스트를 교체합니다.\n여러 파일과 디렉토리의 일괄 처리를 지원합니다.",

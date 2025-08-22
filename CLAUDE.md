@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-**pyhub-documents-cli** is a Go-based CLI application for document automation and AI-powered content generation. It automates repetitive document editing tasks and integrates OpenAI capabilities for content generation directly from the command line.
+**pyhub-docs** is a Go-based CLI application for document automation and AI-powered content generation. It automates repetitive document editing tasks and integrates OpenAI capabilities for content generation directly from the command line.
 
 ## Agent System
 
@@ -60,7 +60,7 @@ Claude Code will automatically activate the appropriate agent based on the task 
 ### Project Setup
 ```bash
 # Initialize Go module
-go mod init github.com/pyhub/pyhub-documents-cli
+go mod init github.com/pyhub/pyhub-docs
 
 # Install dependencies (after adding to go.mod)
 go mod tidy
@@ -69,10 +69,10 @@ go mod tidy
 ### Build Commands
 ```bash
 # Build for current platform
-go build -o pyhub-documents-cli
+go build -o pyhub-docs
 
 # Build Windows executable (from any platform)
-GOOS=windows GOARCH=amd64 go build -ldflags="-s -w" -o pyhub-documents-cli.exe
+GOOS=windows GOARCH=amd64 go build -ldflags="-s -w" -o pyhub-docs.exe
 
 # Run tests
 go test ./...
@@ -84,7 +84,7 @@ go test -run TestFunctionName ./package_name
 ## Project Structure Recommendations
 
 ```
-pyhub-documents-cli/
+pyhub-docs/
 ├── cmd/
 │   └── root.go          # Main CLI entry point and command definitions
 ├── internal/
@@ -103,17 +103,17 @@ pyhub-documents-cli/
 
 ### Replace Command
 ```bash
-pyhub-documents-cli replace --rules vars.yml --path ./docs
+pyhub-docs replace --rules vars.yml --path ./docs
 ```
 
 ### Create Command
 ```bash
-pyhub-documents-cli create --from report.md --template template.docx --output output.docx
+pyhub-docs create --from report.md --template template.docx --output output.docx
 ```
 
 ### Generate Command (Phase 2)
 ```bash
-pyhub-documents-cli generate --type blog --prompt "..." --output draft.md
+pyhub-docs generate --type blog --prompt "..." --output draft.md
 ```
 
 ## Implementation Notes

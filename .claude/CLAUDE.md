@@ -28,7 +28,7 @@ See @AGENTS.md for detailed agent descriptions and activation patterns.
 
 ## Project Context
 
-- **Project**: pyhub-documents-cli
+- **Project**: pyhub-docs
 - **Language**: Go
 - **Purpose**: Document automation CLI with AI integration
 - **Primary Focus**: Word/PowerPoint text replacement and AI content generation

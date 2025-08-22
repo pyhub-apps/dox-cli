@@ -7,7 +7,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/pyhub/pyhub-documents-cli/internal/document"
+	"github.com/pyhub/pyhub-docs/internal/document"
 )
 
 func TestReplaceInDocument(t *testing.T) {

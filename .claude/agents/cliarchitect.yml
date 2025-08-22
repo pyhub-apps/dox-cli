@@ -38,7 +38,7 @@ command_structure:
   primary_commands:
     create:
       description: "Create documents from markdown"
-      usage: "pyhub-documents-cli create --from INPUT --template TMPL --output OUT"
+      usage: "pyhub-docs create --from INPUT --template TMPL --output OUT"
       flags:
         --from: "Input markdown file (required)"
         --template: "Template document file (optional)"
@@ -48,7 +48,7 @@ command_structure:
     
     replace:
       description: "Replace text in documents"
-      usage: "pyhub-documents-cli replace --rules FILE --path TARGET"
+      usage: "pyhub-docs replace --rules FILE --path TARGET"
       flags:
         --rules: "YAML file with replacement rules (required)"
         --path: "Target file or directory (required)"
@@ -59,7 +59,7 @@ command_structure:
     
     generate:
       description: "Generate content using AI"
-      usage: "pyhub-documents-cli generate --type TYPE --prompt TEXT"
+      usage: "pyhub-docs generate --type TYPE --prompt TEXT"
       flags:
         --type: "Content type (blog|report|summary)"
         --prompt: "Generation prompt or file containing prompt"
@@ -123,17 +123,17 @@ interactive_features:
 shell_integration:
   completion_scripts:
     bash:
-      - Generate with `pyhub-documents-cli completion bash`
+      - Generate with `pyhub-docs completion bash`
       - Support flag value completion
       - File path completion for relevant flags
     
     zsh:
-      - Generate with `pyhub-documents-cli completion zsh`
+      - Generate with `pyhub-docs completion zsh`
       - Description for each completion
       - Smart completion based on context
     
     fish:
-      - Generate with `pyhub-documents-cli completion fish`
+      - Generate with `pyhub-docs completion fish`
       - Rich descriptions
       - Dynamic completion
 

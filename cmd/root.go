@@ -5,7 +5,7 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/pyhub/pyhub-documents-cli/internal/i18n"
+	"github.com/pyhub/pyhub-docs/internal/i18n"
 	"github.com/spf13/cobra"
 )
 
@@ -19,9 +19,9 @@ var (
 
 // rootCmd represents the base command when called without any subcommands
 var rootCmd = &cobra.Command{
-	Use:   "pyhub-documents-cli",
+	Use:   "pyhub-docs",
 	Short: "Document automation and AI-powered content generation CLI",
-	Long: `pyhub-documents-cli is a powerful CLI tool for document automation.
+	Long: `pyhub-docs is a powerful CLI tool for document automation.
 
 It provides:
   • Bulk text replacement across Word/PowerPoint documents
@@ -31,13 +31,13 @@ It provides:
 
 Examples:
   # Replace text in documents
-  pyhub-documents-cli replace --rules rules.yml --path ./docs
+  pyhub-docs replace --rules rules.yml --path ./docs
 
   # Create document from markdown
-  pyhub-documents-cli create --from report.md --template template.docx --output final.docx
+  pyhub-docs create --from report.md --template template.docx --output final.docx
 
   # Generate content with AI (coming soon)
-  pyhub-documents-cli generate --type blog --prompt "Docker best practices" --output blog.md`,
+  pyhub-docs generate --type blog --prompt "Docker best practices" --output blog.md`,
 	Version: Version,
 }
 

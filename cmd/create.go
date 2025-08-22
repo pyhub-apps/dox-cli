@@ -6,8 +6,8 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/pyhub/pyhub-documents-cli/internal/i18n"
-	"github.com/pyhub/pyhub-documents-cli/internal/markdown"
+	"github.com/pyhub/pyhub-docs/internal/i18n"
+	"github.com/pyhub/pyhub-docs/internal/markdown"
 	"github.com/spf13/cobra"
 )
 
@@ -67,7 +67,7 @@ func init() {
 func runCreate(cmd *cobra.Command, args []string) error {
 	// Check if input file exists
 	if _, err := os.Stat(fromFile); os.IsNotExist(err) {
-		return fmt.Errorf(i18n.T(i18n.MsgErrorFileNotFound, map[string]interface{}{
+		return fmt.Errorf("%s", i18n.T(i18n.MsgErrorFileNotFound, map[string]interface{}{
 			"Type": "Input",
 			"Path": fromFile,
 		}))
@@ -76,7 +76,7 @@ func runCreate(cmd *cobra.Command, args []string) error {
 	// Check if output file exists and force flag is not set
 	if !force {
 		if _, err := os.Stat(outputFile); err == nil {
-			return fmt.Errorf(i18n.T(i18n.MsgErrorFileExists, map[string]interface{}{
+			return fmt.Errorf("%s", i18n.T(i18n.MsgErrorFileExists, map[string]interface{}{
 				"Path": outputFile,
 			}))
 		}
@@ -93,7 +93,7 @@ func runCreate(cmd *cobra.Command, args []string) error {
 		case ".pptx":
 			outputFormat = "pptx"
 		default:
-			return fmt.Errorf(i18n.T(i18n.MsgErrorInvalidFormat, map[string]interface{}{
+			return fmt.Errorf("%s", i18n.T(i18n.MsgErrorInvalidFormat, map[string]interface{}{
 				"Type":     "extension",
 				"Value":    ext,
 				"Expected": "--format",
@@ -104,7 +104,7 @@ func runCreate(cmd *cobra.Command, args []string) error {
 	// Validate format
 	outputFormat = strings.ToLower(outputFormat)
 	if outputFormat != "docx" && outputFormat != "pptx" {
-		return fmt.Errorf(i18n.T(i18n.MsgErrorUnsupported, map[string]interface{}{
+		return fmt.Errorf("%s", i18n.T(i18n.MsgErrorUnsupported, map[string]interface{}{
 			"Type":      "format",
 			"Value":     outputFormat,
 			"Supported": "docx, pptx",
@@ -113,7 +113,7 @@ func runCreate(cmd *cobra.Command, args []string) error {
 
 	// Check if template is specified (not yet implemented)
 	if templateFile != "" {
-		cmd.PrintErrf(i18n.T(i18n.MsgWarningTemplate) + "\n")
+		cmd.PrintErrf("%s\n", i18n.T(i18n.MsgWarningTemplate))
 	}
 
 	// Create appropriate converter
@@ -121,27 +121,27 @@ func runCreate(cmd *cobra.Command, args []string) error {
 	switch outputFormat {
 	case "docx":
 		converter = markdown.NewWordConverter()
-		cmd.Printf(i18n.T(i18n.MsgProgressConverting, map[string]interface{}{
+		cmd.Printf("%s\n", i18n.T(i18n.MsgProgressConverting, map[string]interface{}{
 			"Source": fromFile,
 			"Type":   "Word",
-		}) + "\n")
+		}))
 	case "pptx":
 		converter = markdown.NewPowerPointConverter()
-		cmd.Printf(i18n.T(i18n.MsgProgressConverting, map[string]interface{}{
+		cmd.Printf("%s\n", i18n.T(i18n.MsgProgressConverting, map[string]interface{}{
 			"Source": fromFile,
 			"Type":   "PowerPoint",
-		}) + "\n")
+		}))
 	}
 
 	// Perform conversion
 	if err := markdown.ConvertFile(fromFile, converter, outputFile); err != nil {
-		return fmt.Errorf(i18n.T(i18n.MsgErrorConversion, map[string]interface{}{
+		return fmt.Errorf("%s", i18n.T(i18n.MsgErrorConversion, map[string]interface{}{
 			"Error": err.Error(),
 		}))
 	}
 
-	cmd.Printf(i18n.T(i18n.MsgSuccessCreated, map[string]interface{}{
+	cmd.Printf("%s\n", i18n.T(i18n.MsgSuccessCreated, map[string]interface{}{
 		"File": outputFile,
-	}) + "\n")
+	}))
 	return nil
 }

@@ -40,19 +40,19 @@ build_configuration:
     primary:
       - os: windows
         arch: amd64
-        output: pyhub-documents-cli.exe
+        output: pyhub-docs.exe
         priority: 1
     
     secondary:
       - os: darwin
         arch: amd64
-        output: pyhub-documents-cli-darwin-amd64
+        output: pyhub-docs-darwin-amd64
       - os: darwin
         arch: arm64
-        output: pyhub-documents-cli-darwin-arm64
+        output: pyhub-docs-darwin-arm64
       - os: linux
         arch: amd64
-        output: pyhub-documents-cli-linux-amd64
+        output: pyhub-docs-linux-amd64
     
     future:
       - os: linux
@@ -101,7 +101,7 @@ build_scripts:
   makefile:
     ```makefile
     # Makefile
-    BINARY_NAME=pyhub-documents-cli
+    BINARY_NAME=pyhub-docs
     VERSION=$(shell git describe --tags --always --dirty)
     LDFLAGS=-ldflags "-s -w -X main.version=${VERSION}"
     
@@ -135,7 +135,7 @@ build_scripts:
     echo "Building Windows amd64..."
     GOOS=windows GOARCH=amd64 go build \
         -ldflags "$LDFLAGS" \
-        -o dist/pyhub-documents-cli.exe
+        -o dist/pyhub-docs.exe
     
     # Generate checksums
     cd dist
@@ -176,7 +176,7 @@ ci_cd_configuration:
   goreleaser_config:
     ```yaml
     # .goreleaser.yml
-    project_name: pyhub-documents-cli
+    project_name: pyhub-docs
     
     builds:
       - env:
@@ -205,7 +205,7 @@ ci_cd_configuration:
     release:
       github:
         owner: pyhub
-        name: pyhub-documents-cli
+        name: pyhub-docs
     ```
 
 versioning_strategy:
@@ -222,7 +222,7 @@ versioning_strategy:
     )
     
     func printVersion() {
-        fmt.Printf("pyhub-documents-cli %s (%s) built on %s\n", 
+        fmt.Printf("pyhub-docs %s (%s) built on %s\n", 
                    version, commit, date)
     }
     ```
@@ -243,15 +243,15 @@ distribution_channels:
   package_managers:
     homebrew:
       ```ruby
-      # Formula/pyhub-documents-cli.rb
+      # Formula/pyhub-docs.rb
       class PyhubDocumentsCli < Formula
         desc "Document automation CLI"
-        homepage "https://github.com/pyhub/pyhub-documents-cli"
-        url "https://github.com/pyhub/pyhub-documents-cli/releases/download/v1.0.0/pyhub-documents-cli_darwin_amd64.zip"
+        homepage "https://github.com/pyhub/pyhub-docs"
+        url "https://github.com/pyhub/pyhub-docs/releases/download/v1.0.0/pyhub-docs_darwin_amd64.zip"
         sha256 "..."
         
         def install
-          bin.install "pyhub-documents-cli"
+          bin.install "pyhub-docs"
         end
       end
       ```
@@ -262,11 +262,11 @@ distribution_channels:
         "version": "1.0.0",
         "architecture": {
           "64bit": {
-            "url": "https://github.com/pyhub/pyhub-documents-cli/releases/download/v1.0.0/pyhub-documents-cli_windows_amd64.zip",
+            "url": "https://github.com/pyhub/pyhub-docs/releases/download/v1.0.0/pyhub-docs_windows_amd64.zip",
             "hash": "..."
           }
         },
-        "bin": "pyhub-documents-cli.exe"
+        "bin": "pyhub-docs.exe"
       }
       ```
 
@@ -288,11 +288,11 @@ install_scripts:
         aarch64) ARCH="arm64" ;;
     esac
     
-    URL="https://github.com/pyhub/pyhub-documents-cli/releases/download/${VERSION}/pyhub-documents-cli_${OS}_${ARCH}"
+    URL="https://github.com/pyhub/pyhub-docs/releases/download/${VERSION}/pyhub-docs_${OS}_${ARCH}"
     
-    echo "Downloading pyhub-documents-cli..."
-    curl -sL "$URL" -o /usr/local/bin/pyhub-documents-cli
-    chmod +x /usr/local/bin/pyhub-documents-cli
+    echo "Downloading pyhub-docs..."
+    curl -sL "$URL" -o /usr/local/bin/pyhub-docs
+    chmod +x /usr/local/bin/pyhub-docs
     
     echo "Installation complete!"
     ```

@@ -7,7 +7,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/pyhub/pyhub-documents-cli/internal/replace"
+	"github.com/pyhub/pyhub-docs/internal/replace"
 	"github.com/spf13/cobra"
 )
 

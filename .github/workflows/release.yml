@@ -18,26 +18,26 @@ jobs:
           # Windows
           - goos: windows
             goarch: amd64
-            binary_name: pyhub-documents-cli.exe
-            asset_name: pyhub-documents-cli-windows-amd64.exe
+            binary_name: pyhub-docs.exe
+            asset_name: pyhub-docs-windows-amd64.exe
           
           # macOS Intel
           - goos: darwin
             goarch: amd64
-            binary_name: pyhub-documents-cli
-            asset_name: pyhub-documents-cli-darwin-amd64
+            binary_name: pyhub-docs
+            asset_name: pyhub-docs-darwin-amd64
           
           # macOS Apple Silicon
           - goos: darwin
             goarch: arm64
-            binary_name: pyhub-documents-cli
-            asset_name: pyhub-documents-cli-darwin-arm64
+            binary_name: pyhub-docs
+            asset_name: pyhub-docs-darwin-arm64
           
           # Linux
           - goos: linux
             goarch: amd64
-            binary_name: pyhub-documents-cli
-            asset_name: pyhub-documents-cli-linux-amd64
+            binary_name: pyhub-docs
+            asset_name: pyhub-docs-linux-amd64
 
     steps:
       - name: Checkout code

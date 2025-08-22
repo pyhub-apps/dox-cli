@@ -24,7 +24,7 @@ assignees: ''
 ## 🌍 Environment
 - OS: 
 - Go version: 
-- pyhub-documents-cli version: 
+- pyhub-docs version: 
 
 ## 📸 Screenshots/Logs
 <!-- If applicable, add screenshots or error logs -->

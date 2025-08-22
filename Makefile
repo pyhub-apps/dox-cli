@@ -1,11 +1,11 @@
-# Makefile for pyhub-documents-cli
+# Makefile for pyhub-docs
 
 # Variables
-BINARY_NAME=pyhub-documents-cli
+BINARY_NAME=pyhub-docs
 VERSION=$(shell git describe --tags --always --dirty 2>/dev/null || echo "dev")
 COMMIT=$(shell git rev-parse --short HEAD 2>/dev/null || echo "none")
 DATE=$(shell date -u +%Y-%m-%dT%H:%M:%SZ)
-LDFLAGS=-ldflags "-s -w -X github.com/pyhub/pyhub-documents-cli/cmd.version=${VERSION} -X github.com/pyhub/pyhub-documents-cli/cmd.commit=${COMMIT} -X github.com/pyhub/pyhub-documents-cli/cmd.date=${DATE}"
+LDFLAGS=-ldflags "-s -w -X github.com/pyhub/pyhub-docs/cmd.version=${VERSION} -X github.com/pyhub/pyhub-docs/cmd.commit=${COMMIT} -X github.com/pyhub/pyhub-docs/cmd.date=${DATE}"
 
 # Go parameters
 GOCMD=go

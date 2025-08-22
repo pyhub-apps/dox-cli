@@ -34,7 +34,7 @@ trigger_keywords:
   - example
 
 package_structure:
-  root_module: "github.com/pyhub/pyhub-documents-cli"
+  root_module: "github.com/pyhub/pyhub-docs"
   
   public_packages:
     pkg/documents:
@@ -287,9 +287,9 @@ testing_interface:
 
 import_path_design:
   structure:
-    - github.com/pyhub/pyhub-documents-cli/pkg/documents
-    - github.com/pyhub/pyhub-documents-cli/pkg/replace
-    - github.com/pyhub/pyhub-documents-cli/pkg/generate
+    - github.com/pyhub/pyhub-docs/pkg/documents
+    - github.com/pyhub/pyhub-docs/pkg/replace
+    - github.com/pyhub/pyhub-docs/pkg/generate
     
   guidelines:
     - Keep paths short and memorable

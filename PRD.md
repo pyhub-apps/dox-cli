@@ -1,10 +1,10 @@
 
-# 제품 요구사항 문서 (PRD): pyhub-documents-cli
+# 제품 요구사항 문서 (PRD): pyhub-docs
 
 ## 1. 개요 (Overview)
 
 ### 1.1. 프로젝트 명
-`pyhub-documents-cli`
+`pyhub-docs`
 
 ### 1.2. 프로젝트 요약
 GoLang으로 개발된 **문서 자동화 및 AI 기반 콘텐츠 생성 CLI(Command-Line Interface) 애플리케이션**. 개발자, 콘텐츠 제작자, 사무직 종사자가 반복적인 문서 편집 작업을 자동화하고, OpenAI의 능력을 활용하여 문서 초안 작성, 요약 등의 작업을 명령행에서 직접 수행할 수 있도록 지원한다.
@@ -39,10 +39,10 @@ GoLang으로 개발된 **문서 자동화 및 AI 기반 콘텐츠 생성 CLI(Com
 
 ### 3.4. 주요 사용 시나리오 (Key Scenarios)
 *   **시나리오 1: 문서 일괄 업데이트 (박준형)**
-    *   릴리즈 스크립트의 일부로 `pyhub-documents-cli replace --rules vars.yml --path ./docs` 명령을 실행하여 `./docs` 폴더 내 모든 Word/PPT 문서의 버전 정보를 한 번에 업데이트한다.
+    *   릴리즈 스크립트의 일부로 `pyhub-docs replace --rules vars.yml --path ./docs` 명령을 실행하여 `./docs` 폴더 내 모든 Word/PPT 문서의 버전 정보를 한 번에 업데이트한다.
 *   **시나리오 2: 주간 업무 보고서 생성 (김민준 주무관)**
     *   한 주간의 업무 내용을 `report.md` 파일에 마크다운으로 정리한다.
-    *   `pyhub-documents-cli create --from report.md --template "보고서_서식.docx" --output "금주_보고서.docx"` 명령으로, 기존 서식은 유지되고 내용만 채워진 Word 보고서를 생성한다.
+    *   `pyhub-docs create --from report.md --template "보고서_서식.docx" --output "금주_보고서.docx"` 명령으로, 기존 서식은 유지되고 내용만 채워진 Word 보고서를 생성한다.
 
 ## 4. 핵심 기능 요구사항 (Features & Requirements)
 

@@ -6,7 +6,7 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/pyhub/pyhub-documents-cli/internal/document"
+	"github.com/pyhub/pyhub-docs/internal/document"
 )
 
 // ReplaceInDocument applies replacement rules to a single Word or PowerPoint document

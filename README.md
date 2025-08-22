@@ -1,7 +1,7 @@
-# pyhub-documents-cli
+# pyhub-docs
 
 [![Go Version](https://img.shields.io/badge/go-1.21-blue.svg)](https://go.dev/)
-[![Release](https://img.shields.io/github/v/release/pyhub-kr/pyhub-documents-cli)](https://github.com/pyhub-kr/pyhub-documents-cli/releases)
+[![Release](https://img.shields.io/github/v/release/pyhub-kr/pyhub-docs)](https://github.com/pyhub-kr/pyhub-docs/releases)
 [![HeadVer](https://img.shields.io/badge/versioning-HeadVer-blue)](https://github.com/line/headver)
 [![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
 
@@ -20,36 +20,36 @@ Document automation and AI-powered content generation CLI tool for developers an
 
 ### Download Binary
 
-Download the latest release (v1.2534.0) for your platform from the [releases page](https://github.com/pyhub-kr/pyhub-documents-cli/releases).
+Download the latest release (v1.2534.0) for your platform from the [releases page](https://github.com/pyhub-kr/pyhub-docs/releases).
 
 #### Quick Install
 
 **Windows (PowerShell)**:
 ```powershell
-Invoke-WebRequest -Uri "https://github.com/pyhub-kr/pyhub-documents-cli/releases/latest/download/pyhub-documents-cli.exe" -OutFile "pyhub-documents-cli.exe"
+Invoke-WebRequest -Uri "https://github.com/pyhub-kr/pyhub-docs/releases/latest/download/pyhub-docs.exe" -OutFile "pyhub-docs.exe"
 ```
 
 **macOS/Linux**:
 ```bash
 # macOS Intel
-curl -L -o pyhub-documents-cli https://github.com/pyhub-kr/pyhub-documents-cli/releases/latest/download/pyhub-documents-cli-darwin-amd64
+curl -L -o pyhub-docs https://github.com/pyhub-kr/pyhub-docs/releases/latest/download/pyhub-docs-darwin-amd64
 
 # macOS Apple Silicon
-curl -L -o pyhub-documents-cli https://github.com/pyhub-kr/pyhub-documents-cli/releases/latest/download/pyhub-documents-cli-darwin-arm64
+curl -L -o pyhub-docs https://github.com/pyhub-kr/pyhub-docs/releases/latest/download/pyhub-docs-darwin-arm64
 
 # Linux
-curl -L -o pyhub-documents-cli https://github.com/pyhub-kr/pyhub-documents-cli/releases/latest/download/pyhub-documents-cli-linux-amd64
+curl -L -o pyhub-docs https://github.com/pyhub-kr/pyhub-docs/releases/latest/download/pyhub-docs-linux-amd64
 
-chmod +x pyhub-documents-cli
-sudo mv pyhub-documents-cli /usr/local/bin/
+chmod +x pyhub-docs
+sudo mv pyhub-docs /usr/local/bin/
 ```
 
 ### Build from Source
 
 ```bash
 # Clone the repository
-git clone https://github.com/pyhub/pyhub-documents-cli.git
-cd pyhub-documents-cli
+git clone https://github.com/pyhub/pyhub-docs.git
+cd pyhub-docs
 
 # Build
 make build
@@ -75,7 +75,7 @@ Create a YAML file with replacement rules:
 
 Run the replacement:
 ```bash
-pyhub-documents-cli replace --rules rules.yml --path ./docs
+pyhub-docs replace --rules rules.yml --path ./docs
 ```
 
 ### Create Document from Markdown
@@ -84,16 +84,16 @@ Convert Markdown files to Word or PowerPoint:
 
 ```bash
 # Convert to Word document
-pyhub-documents-cli create --from report.md --output report.docx
+pyhub-docs create --from report.md --output report.docx
 
 # Convert to PowerPoint presentation
-pyhub-documents-cli create --from slides.md --output presentation.pptx
+pyhub-docs create --from slides.md --output presentation.pptx
 
 # Format is auto-detected from extension, or specify explicitly
-pyhub-documents-cli create --from content.md --output output.docx --format docx
+pyhub-docs create --from content.md --output output.docx --format docx
 
 # With template (Coming Soon)
-pyhub-documents-cli create --from content.md --template company.docx --output final.docx
+pyhub-docs create --from content.md --template company.docx --output final.docx
 ```
 
 **Markdown to PowerPoint Conversion:**
@@ -110,7 +110,7 @@ pyhub-documents-cli create --from content.md --template company.docx --output fi
 ### Generate AI Content (Coming Soon)
 
 ```bash
-pyhub-documents-cli generate --type blog --prompt "Go best practices" --output blog.md
+pyhub-docs generate --type blog --prompt "Go best practices" --output blog.md
 ```
 
 ## 🌍 Internationalization (i18n)
@@ -126,13 +126,13 @@ The CLI automatically detects your system language from environment variables (`
 
 ```bash
 # Use Korean interface
-pyhub-documents-cli --lang ko replace --rules rules.yml --path ./docs
+pyhub-docs --lang ko replace --rules rules.yml --path ./docs
 
 # Use English interface
-pyhub-documents-cli --lang en create --from report.md --output report.docx
+pyhub-docs --lang en create --from report.md --output report.docx
 
 # Auto-detect from system (default)
-pyhub-documents-cli replace --rules rules.yml --path ./docs
+pyhub-docs replace --rules rules.yml --path ./docs
 ```
 
 ### System Language Detection Priority
@@ -144,12 +144,12 @@ pyhub-documents-cli replace --rules rules.yml --path ./docs
 ### Examples
 ```bash
 # Korean system (LANG=ko_KR.UTF-8)
-$ pyhub-documents-cli create --from report.md --output report.docx
+$ pyhub-docs create --from report.md --output report.docx
 report.md를 Word 문서로 변환 중...
 ✅ report.docx 생성 완료
 
 # English system or with --lang en
-$ pyhub-documents-cli --lang en create --from report.md --output report.docx
+$ pyhub-docs --lang en create --from report.md --output report.docx
 Converting report.md to Word document...
 ✅ Successfully created report.docx
 ```
@@ -170,7 +170,7 @@ Converting report.md to Word document...
 ### Project Structure
 
 ```
-pyhub-documents-cli/
+pyhub-docs/
 ├── cmd/            # CLI commands
 ├── internal/       # Internal packages
 ├── pkg/            # Public packages
@@ -266,8 +266,8 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ## 📞 Support
 
-- Create an [issue](https://github.com/pyhub/pyhub-documents-cli/issues) for bugs or features
-- Check [discussions](https://github.com/pyhub/pyhub-documents-cli/discussions) for Q&A
+- Create an [issue](https://github.com/pyhub/pyhub-docs/issues) for bugs or features
+- Check [discussions](https://github.com/pyhub/pyhub-docs/discussions) for Q&A
 
 ---
 

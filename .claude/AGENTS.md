@@ -1,4 +1,4 @@
-# Agent System for pyhub-documents-cli
+# Agent System for pyhub-docs
 
 ## Overview
 

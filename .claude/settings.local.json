@@ -18,7 +18,20 @@
       "Bash(echo $LC_ALL)",
       "WebSearch",
       "Bash(go run:*)",
-      "Bash(rm:*)"
+      "Bash(rm:*)",
+      "Bash(find:*)",
+      "Bash(for:*)",
+      "Bash(do sed -i '' 's|github\\.com/pyhub/pyhub-documents-cli|github.com/pyhub/pyhub-docs|g' \"$file\")",
+      "Bash(done)",
+      "Bash(sed:*)",
+      "Bash(do if [ -f \"$file\" ])",
+      "Bash(then sed -i '' 's/pyhub-documents-cli/pyhub-docs/g' \"$file\")",
+      "Bash(fi)",
+      "Bash(go mod:*)",
+      "Bash(./pyhub-docs --help)",
+      "Bash(./pyhub-docs --lang ko --help)",
+      "Bash(LANG=ko_KR.UTF-8 ./pyhub-docs --help)",
+      "Bash(LANG=ko_KR.UTF-8 ./pyhub-docs replace --help)"
     ],
     "deny": [],
     "ask": []

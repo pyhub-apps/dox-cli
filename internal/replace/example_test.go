@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"log"
 
-	"github.com/pyhub/pyhub-documents-cli/internal/replace"
+	"github.com/pyhub/pyhub-docs/internal/replace"
 )
 
 func ExampleParseYAMLRules() {

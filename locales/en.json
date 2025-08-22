@@ -1,6 +1,6 @@
 {
   "cmd.root.short": "Document automation and AI-powered content generation CLI",
-  "cmd.root.long": "pyhub-documents-cli is a powerful CLI tool for document automation.\nIt automates document editing and content generation tasks.",
+  "cmd.root.long": "pyhub-docs is a powerful CLI tool for document automation.\nIt automates document editing and content generation tasks.",
   
   "cmd.replace.short": "Replace text in documents using rules from a YAML file",
   "cmd.replace.long": "Replace text in Word and PowerPoint documents based on rules defined in a YAML file.\nSupports batch processing of multiple files and directories.",

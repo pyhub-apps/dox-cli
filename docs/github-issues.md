@@ -1,4 +1,4 @@
-# GitHub Issues for pyhub-documents-cli
+# GitHub Issues for pyhub-docs
 
 ## Milestones
 

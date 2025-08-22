@@ -54,7 +54,7 @@ Binary releases available for Windows, macOS (Intel/ARM), and Linux.
 
 ### 🎉 Initial Release
 
-This is the first official release of pyhub-documents-cli, a powerful CLI tool for document automation with a focus on Word document text replacement.
+This is the first official release of pyhub-docs, a powerful CLI tool for document automation with a focus on Word document text replacement.
 
 ### ✨ Features
 
@@ -103,34 +103,34 @@ This is the first official release of pyhub-documents-cli, a powerful CLI tool f
 #### Windows
 ```powershell
 # Download the executable
-Invoke-WebRequest -Uri "https://github.com/pyhub-kr/pyhub-documents-cli/releases/download/v0.1.0/pyhub-documents-cli-windows-amd64.exe" -OutFile "pyhub-documents-cli.exe"
+Invoke-WebRequest -Uri "https://github.com/pyhub-kr/pyhub-docs/releases/download/v0.1.0/pyhub-docs-windows-amd64.exe" -OutFile "pyhub-docs.exe"
 ```
 
 #### macOS
 ```bash
 # Intel
-curl -L -o pyhub-documents-cli https://github.com/pyhub-kr/pyhub-documents-cli/releases/download/v0.1.0/pyhub-documents-cli-darwin-amd64
+curl -L -o pyhub-docs https://github.com/pyhub-kr/pyhub-docs/releases/download/v0.1.0/pyhub-docs-darwin-amd64
 
 # Apple Silicon
-curl -L -o pyhub-documents-cli https://github.com/pyhub-kr/pyhub-documents-cli/releases/download/v0.1.0/pyhub-documents-cli-darwin-arm64
+curl -L -o pyhub-docs https://github.com/pyhub-kr/pyhub-docs/releases/download/v0.1.0/pyhub-docs-darwin-arm64
 
-chmod +x pyhub-documents-cli
-sudo mv pyhub-documents-cli /usr/local/bin/
+chmod +x pyhub-docs
+sudo mv pyhub-docs /usr/local/bin/
 ```
 
 #### Linux
 ```bash
-curl -L -o pyhub-documents-cli https://github.com/pyhub-kr/pyhub-documents-cli/releases/download/v0.1.0/pyhub-documents-cli-linux-amd64
-chmod +x pyhub-documents-cli
-sudo mv pyhub-documents-cli /usr/local/bin/
+curl -L -o pyhub-docs https://github.com/pyhub-kr/pyhub-docs/releases/download/v0.1.0/pyhub-docs-linux-amd64
+chmod +x pyhub-docs
+sudo mv pyhub-docs /usr/local/bin/
 ```
 
 ### 👥 Contributors
 - @allieus - Project lead and main contributor
 
 ### 🔗 Links
-- [GitHub Repository](https://github.com/pyhub-kr/pyhub-documents-cli)
-- [Issue Tracker](https://github.com/pyhub-kr/pyhub-documents-cli/issues)
+- [GitHub Repository](https://github.com/pyhub-kr/pyhub-docs)
+- [Issue Tracker](https://github.com/pyhub-kr/pyhub-docs/issues)
 
 ---
 
@@ -144,5 +144,5 @@ Previous versions (v0.x.x) used Semantic Versioning.
 
 ---
 
-[v1.2534.0]: https://github.com/pyhub-kr/pyhub-documents-cli/releases/tag/v1.2534.0
-[0.1.0]: https://github.com/pyhub-kr/pyhub-documents-cli/releases/tag/v0.1.0
+[v1.2534.0]: https://github.com/pyhub-kr/pyhub-docs/releases/tag/v1.2534.0
+[0.1.0]: https://github.com/pyhub-kr/pyhub-docs/releases/tag/v0.1.0
