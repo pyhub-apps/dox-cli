@@ -41,7 +41,13 @@ func ProcessLargeFile(filePath string, rules []Rule, opts *LargeFileOptions) (*R
 	// Get file info
 	fileInfo, err := os.Stat(filePath)
 	if err != nil {
-		return nil, fmt.Errorf("failed to stat file: %w", err)
+		if os.IsNotExist(err) {
+			return nil, fmt.Errorf("file does not exist: %s", filePath)
+		}
+		if os.IsPermission(err) {
+			return nil, fmt.Errorf("permission denied accessing file: %s", filePath)
+		}
+		return nil, fmt.Errorf("failed to stat file %s: %w", filePath, err)
 	}
 	
 	fileSize := fileInfo.Size()
