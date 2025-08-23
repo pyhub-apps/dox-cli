@@ -188,11 +188,7 @@ func (d *StreamingPowerPointDocument) ReplaceTextInSlidesStreaming(oldText, newT
 	tmpPath := tmpFile.Name()
 	
 	// Ensure temp file is cleaned up in all cases
-	defer func() {
-		if _, err := os.Stat(tmpPath); err == nil {
-			os.Remove(tmpPath)
-		}
-	}()
+	defer CleanupTempFile(tmpPath)
 	
 	// Create new zip writer for output
 	zipWriter := zip.NewWriter(tmpFile)
@@ -344,21 +340,6 @@ func (d *StreamingPowerPointDocument) streamAndModifySlide(src *zip.File, dst *z
 
 // copyZipFile copies a file from source zip to destination zip without modification
 func (d *StreamingPowerPointDocument) copyZipFile(src *zip.File, dst *zip.Writer) error {
-	reader, err := src.Open()
-	if err != nil {
-		return fmt.Errorf("failed to open source file: %w", err)
-	}
-	defer reader.Close()
-	
-	// Create destination file with same metadata
-	// Clone the header to avoid modifying the original
-	header := src.FileHeader
-	header.Method = zip.Deflate // Ensure consistent compression
-	writer, err := dst.CreateHeader(&header)
-	if err != nil {
-		return fmt.Errorf("failed to create destination file: %w", err)
-	}
-	
 	// Use buffer from pool if available
 	var buffer []byte
 	if d.options.EnableMemoryPool && d.memPool != nil {
@@ -368,12 +349,10 @@ func (d *StreamingPowerPointDocument) copyZipFile(src *zip.File, dst *zip.Writer
 		buffer = make([]byte, d.options.ChunkSize)
 	}
 	
-	// Stream copy with buffer
-	_, err = io.CopyBuffer(writer, reader, buffer)
+	err := CopyZipFileWithCompression(src, dst, buffer)
 	if err != nil {
-		return fmt.Errorf("failed to copy file content: %w", err)
+		return fmt.Errorf("failed to copy zip file: %w", err)
 	}
-	
 	return nil
 }
 

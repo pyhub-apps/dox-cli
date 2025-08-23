@@ -3,6 +3,7 @@ package replace
 import (
 	"os"
 	"path/filepath"
+	"strings"
 	"testing"
 )
 
@@ -24,7 +25,7 @@ func TestProcessLargeFile_NonExistentFile(t *testing.T) {
 	}
 	
 	expectedMsg := "file does not exist"
-	if !testContains(err.Error(), expectedMsg) {
+	if !strings.Contains(err.Error(), expectedMsg) {
 		t.Errorf("Expected error message to contain '%s', got: %v", expectedMsg, err)
 	}
 }
@@ -54,7 +55,7 @@ func TestProcessLargeFile_UnsupportedFileType(t *testing.T) {
 	}
 	
 	expectedMsg := "unsupported file type"
-	if !testContains(err.Error(), expectedMsg) {
+	if !strings.Contains(err.Error(), expectedMsg) {
 		t.Errorf("Expected error message to contain '%s', got: %v", expectedMsg, err)
 	}
 }
@@ -161,22 +162,6 @@ func TestEstimateMemoryUsage(t *testing.T) {
 }
 
 // Helper functions
-
-func testContains(s, substr string) bool {
-	return len(s) > 0 && len(substr) > 0 && len(s) >= len(substr) && 
-		(s == substr || len(s) > len(substr) && 
-			(s[:len(substr)] == substr || s[len(s)-len(substr):] == substr ||
-			 testFindSubstring(s, substr)))
-}
-
-func testFindSubstring(s, substr string) bool {
-	for i := 1; i < len(s)-len(substr); i++ {
-		if s[i:i+len(substr)] == substr {
-			return true
-		}
-	}
-	return false
-}
 
 func createFileWithSize(path string, size int64) error {
 	file, err := os.Create(path)

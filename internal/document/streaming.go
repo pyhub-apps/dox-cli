@@ -36,21 +36,21 @@ func AdaptiveStreamingOptions(fileSize int64) *StreamingOptions {
 	
 	// Adapt chunk size based on file size
 	switch {
-	case fileSize < 10*1024*1024: // < 10MB
-		opts.ChunkSize = 32 * 1024 // 32KB chunks
-		opts.MaxMemory = 50 * 1024 * 1024 // 50MB max
+	case fileSize < SmallFileThreshold:
+		opts.ChunkSize = SmallFileChunkSize
+		opts.MaxMemory = SmallFileMemoryLimit
 		
-	case fileSize < 50*1024*1024: // < 50MB
-		opts.ChunkSize = 64 * 1024 // 64KB chunks
-		opts.MaxMemory = 100 * 1024 * 1024 // 100MB max
+	case fileSize < MediumFileThreshold:
+		opts.ChunkSize = MediumFileChunkSize
+		opts.MaxMemory = MediumFileMemoryLimit
 		
-	case fileSize < 100*1024*1024: // < 100MB
-		opts.ChunkSize = 128 * 1024 // 128KB chunks
-		opts.MaxMemory = 200 * 1024 * 1024 // 200MB max
+	case fileSize < LargeFileThreshold:
+		opts.ChunkSize = LargeFileChunkSize
+		opts.MaxMemory = LargeFileMemoryLimit
 		
 	default: // >= 100MB
-		opts.ChunkSize = 256 * 1024 // 256KB chunks
-		opts.MaxMemory = 500 * 1024 * 1024 // 500MB max
+		opts.ChunkSize = VeryLargeFileChunkSize
+		opts.MaxMemory = VeryLargeFileMemoryLimit
 	}
 	
 	return opts
@@ -223,11 +223,7 @@ func (d *StreamingWordDocument) ReplaceTextStreaming(oldText, newText string) (i
 	tmpPath := tmpFile.Name()
 	
 	// Ensure temp file is cleaned up in all cases
-	defer func() {
-		if _, err := os.Stat(tmpPath); err == nil {
-			os.Remove(tmpPath)
-		}
-	}()
+	defer CleanupTempFile(tmpPath)
 	
 	// Create new zip writer for output
 	zipWriter := zip.NewWriter(tmpFile)
@@ -377,21 +373,6 @@ func (d *StreamingWordDocument) streamAndModifyXML(src *zip.File, dst *zip.Write
 
 // copyZipFile copies a file from source zip to destination zip without modification
 func (d *StreamingWordDocument) copyZipFile(src *zip.File, dst *zip.Writer) error {
-	reader, err := src.Open()
-	if err != nil {
-		return fmt.Errorf("failed to open source file: %w", err)
-	}
-	defer reader.Close()
-	
-	// Create destination file with same metadata
-	// Clone the header to avoid modifying the original
-	header := src.FileHeader
-	header.Method = zip.Deflate // Ensure consistent compression
-	writer, err := dst.CreateHeader(&header)
-	if err != nil {
-		return fmt.Errorf("failed to create destination file: %w", err)
-	}
-	
 	// Use buffer from pool if available
 	var buffer []byte
 	if d.options.EnableMemoryPool && d.memPool != nil {
@@ -401,12 +382,10 @@ func (d *StreamingWordDocument) copyZipFile(src *zip.File, dst *zip.Writer) erro
 		buffer = make([]byte, d.options.ChunkSize)
 	}
 	
-	// Stream copy with buffer
-	_, err = io.CopyBuffer(writer, reader, buffer)
+	err := CopyZipFileWithCompression(src, dst, buffer)
 	if err != nil {
-		return fmt.Errorf("failed to copy file content: %w", err)
+		return fmt.Errorf("failed to copy zip file: %w", err)
 	}
-	
 	return nil
 }
 
