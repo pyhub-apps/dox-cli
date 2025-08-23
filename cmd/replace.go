@@ -27,6 +27,8 @@ var (
 	maxWorkers      int
 	replaceJsonOutput bool
 	showDiff        bool
+	enableStreaming bool
+	memoryMonitor   bool
 )
 
 // replaceCmd represents the replace command
@@ -158,16 +160,46 @@ Examples:
 				ui.PrintInfo("Processing file: %s", targetPath)
 			}
 			
-			count, err := replace.ReplaceInDocumentWithCount(targetPath, rules)
+			// Check if we should use large file processing
+			fileInfo, err := os.Stat(targetPath)
 			if err != nil {
-				if errors.Is(err, pkgErrors.ErrDocumentCorrupted) {
-					return pkgErrors.NewDocumentError(targetPath, ext, "document appears to be corrupted", err)
+				// If file doesn't exist or we can't stat it, proceed without streaming
+				if !os.IsNotExist(err) {
+					ui.PrintError("Failed to check file %s: %v", targetPath, err)
 				}
-				return pkgErrors.NewDocumentError(targetPath, ext, "processing failed", err)
+				fileInfo = nil
 			}
-			
-			if verbose {
-				ui.PrintInfo("Made %d replacements in %s", count, targetPath)
+			if enableStreaming && fileInfo != nil && fileInfo.Size() > 10*1024*1024 { // > 10MB
+				// Use large file processing
+				opts := replace.DefaultLargeFileOptions()
+				opts.EnableStreaming = enableStreaming
+				opts.EnableMemoryMonitor = memoryMonitor
+				opts.ShowMemoryUsage = verbose
+				
+				result, err := replace.ProcessLargeFile(targetPath, rules, opts)
+				if err != nil {
+					if errors.Is(err, pkgErrors.ErrDocumentCorrupted) {
+						return pkgErrors.NewDocumentError(targetPath, ext, "document appears to be corrupted", err)
+					}
+					return pkgErrors.NewDocumentError(targetPath, ext, "processing failed", err)
+				}
+				
+				if verbose {
+					ui.PrintInfo("Made %d replacements in %s", result.Replacements, targetPath)
+				}
+			} else {
+				// Use standard processing for small files
+				count, err := replace.ReplaceInDocumentWithCount(targetPath, rules)
+				if err != nil {
+					if errors.Is(err, pkgErrors.ErrDocumentCorrupted) {
+						return pkgErrors.NewDocumentError(targetPath, ext, "document appears to be corrupted", err)
+					}
+					return pkgErrors.NewDocumentError(targetPath, ext, "processing failed", err)
+				}
+				
+				if verbose {
+					ui.PrintInfo("Made %d replacements in %s", count, targetPath)
+				}
 			}
 
 			ui.PrintSuccess("Successfully processed: %s", targetPath)
@@ -375,6 +407,8 @@ func init() {
 	replaceCmd.Flags().IntVar(&maxWorkers, "max-workers", 0, "Maximum number of concurrent workers (default: number of CPUs)")
 	replaceCmd.Flags().BoolVar(&replaceJsonOutput, "json", false, "Output in JSON format")
 	replaceCmd.Flags().BoolVar(&showDiff, "diff", false, "Show diff-style preview in dry-run mode")
+	replaceCmd.Flags().BoolVar(&enableStreaming, "streaming", false, "Enable streaming mode for large files (experimental)")
+	replaceCmd.Flags().BoolVar(&memoryMonitor, "memory-monitor", true, "Enable memory usage monitoring")
 
 	replaceCmd.MarkFlagRequired("rules")
 	replaceCmd.MarkFlagRequired("path")
