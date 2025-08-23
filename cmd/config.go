@@ -6,16 +6,19 @@ import (
 	"strings"
 
 	"github.com/pyhub/pyhub-docs/internal/config"
+	"github.com/pyhub/pyhub-docs/internal/secrets"
 	"github.com/spf13/cobra"
 	"gopkg.in/yaml.v3"
 )
 
 var (
-	configPath string
-	configInit bool
-	configList bool
-	configSet  string
-	configGet  string
+	configPath   string
+	configInit   bool
+	configList   bool
+	configSet    string
+	configGet    string
+	useKeyring   bool
+	noKeyring    bool
 )
 
 // configCmd represents the config command
@@ -53,6 +56,8 @@ func init() {
 	configCmd.Flags().StringVar(&configSet, "set", "", "설정 값 변경 (key=value)")
 	configCmd.Flags().StringVar(&configGet, "get", "", "특정 설정 값 확인")
 	configCmd.Flags().StringVar(&configPath, "path", "", "설정 파일 경로 (기본: ~/.pyhub/config.yml)")
+	configCmd.Flags().BoolVar(&useKeyring, "use-keyring", false, "시스템 키체인에 API 키 저장 (안전한 저장)")
+	configCmd.Flags().BoolVar(&noKeyring, "no-keyring", false, "시스템 키체인 사용하지 않음")
 }
 
 func runConfig(cmd *cobra.Command, args []string) error {
@@ -140,16 +145,34 @@ func getConfig(path string, key string) error {
 	// 키에 따라 값 출력
 	// 간단한 구현 - 실제로는 더 복잡한 키 탐색이 필요
 	switch key {
-	case "openai.api_key":
-		if cfg.OpenAI.APIKey != "" {
-			// API 키는 일부만 표시
-			if len(cfg.OpenAI.APIKey) > 8 {
-				fmt.Printf("%s: sk-...%s\n", key, cfg.OpenAI.APIKey[len(cfg.OpenAI.APIKey)-4:])
-			} else {
-				fmt.Printf("%s: %s\n", key, cfg.OpenAI.APIKey)
-			}
+	case "openai.api_key", "claude.api_key":
+		provider := "openai"
+		if key == "claude.api_key" {
+			provider = "claude"
+		}
+		
+		// 먼저 키체인에서 확인
+		storage := secrets.NewSecureStorage()
+		if apiKey, err := storage.RetrieveAPIKey(provider); err == nil && apiKey != "" {
+			masked := secrets.MaskAPIKey(apiKey)
+			fmt.Printf("%s: %s (stored in keychain)\n", key, masked)
 		} else {
-			fmt.Printf("%s: (not set)\n", key)
+			// 설정 파일에서 확인
+			var apiKey string
+			if provider == "openai" {
+				apiKey = cfg.OpenAI.APIKey
+			} else {
+				apiKey = cfg.Claude.APIKey
+			}
+			
+			if apiKey != "" && apiKey != "<stored-in-keychain>" {
+				masked := secrets.MaskAPIKey(apiKey)
+				fmt.Printf("%s: %s\n", key, masked)
+			} else if apiKey == "<stored-in-keychain>" {
+				fmt.Printf("%s: (error reading from keychain)\n", key)
+			} else {
+				fmt.Printf("%s: (not set)\n", key)
+			}
 		}
 	case "openai.model":
 		fmt.Printf("%s: %s\n", key, cfg.OpenAI.Model)
@@ -195,7 +218,30 @@ func setConfig(path string, keyValue string) error {
 	// 키에 따라 값 설정
 	switch key {
 	case "openai.api_key":
-		cfg.OpenAI.APIKey = value
+		// API 키 검증
+		if err := secrets.ValidateAPIKey("openai", value); err != nil {
+			return fmt.Errorf("API 키 검증 실패: %w", err)
+		}
+		
+		// 키체인 사용 여부 확인
+		if useKeyring && !noKeyring {
+			storage := secrets.NewSecureStorage()
+			if storage.IsSupported() {
+				if err := storage.StoreAPIKey("openai", value); err != nil {
+					secrets.Warnf("키체인 저장 실패 (설정 파일에 저장됩니다): %v", err)
+					cfg.OpenAI.APIKey = value
+				} else {
+					// 키체인에 저장 성공 - 설정 파일에는 플레이스홀더 저장
+					cfg.OpenAI.APIKey = "<stored-in-keychain>"
+					fmt.Println("API 키가 시스템 키체인에 안전하게 저장되었습니다")
+				}
+			} else {
+				secrets.Warnf("이 시스템에서는 키체인이 지원되지 않습니다")
+				cfg.OpenAI.APIKey = value
+			}
+		} else {
+			cfg.OpenAI.APIKey = value
+		}
 	case "openai.model":
 		cfg.OpenAI.Model = value
 	case "openai.max_tokens":
@@ -206,6 +252,31 @@ func setConfig(path string, keyValue string) error {
 		var temp float64
 		fmt.Sscanf(value, "%f", &temp)
 		cfg.OpenAI.Temperature = temp
+	case "claude.api_key":
+		// API 키 검증
+		if err := secrets.ValidateAPIKey("claude", value); err != nil {
+			return fmt.Errorf("API 키 검증 실패: %w", err)
+		}
+		
+		// 키체인 사용 여부 확인
+		if useKeyring && !noKeyring {
+			storage := secrets.NewSecureStorage()
+			if storage.IsSupported() {
+				if err := storage.StoreAPIKey("claude", value); err != nil {
+					secrets.Warnf("키체인 저장 실패 (설정 파일에 저장됩니다): %v", err)
+					cfg.Claude.APIKey = value
+				} else {
+					// 키체인에 저장 성공 - 설정 파일에는 플레이스홀더 저장
+					cfg.Claude.APIKey = "<stored-in-keychain>"
+					fmt.Println("API 키가 시스템 키체인에 안전하게 저장되었습니다")
+				}
+			} else {
+				secrets.Warnf("이 시스템에서는 키체인이 지원되지 않습니다")
+				cfg.Claude.APIKey = value
+			}
+		} else {
+			cfg.Claude.APIKey = value
+		}
 	case "global.verbose":
 		cfg.Global.Verbose = (value == "true")
 	case "global.quiet":

@@ -72,6 +72,37 @@ func (w *WordProcessor) ValidateTemplate(templatePath string, values map[string]
 	return missing, nil
 }
 
+// ExtractPlaceholders extracts all placeholders from the template
+func (w *WordProcessor) ExtractPlaceholders(templatePath string) ([]string, error) {
+	// Open template document
+	doc, err := document.OpenWordDocument(templatePath)
+	if err != nil {
+		return nil, fmt.Errorf("failed to open template: %w", err)
+	}
+	defer doc.Close()
+	
+	// Get document text
+	text, err := doc.GetText()
+	if err != nil {
+		return nil, fmt.Errorf("failed to get text from template: %w", err)
+	}
+	
+	// Find all placeholders
+	placeholders := w.parser.FindPlaceholders(text)
+	
+	// Extract unique placeholder names
+	seen := make(map[string]bool)
+	names := make([]string, 0)
+	for _, p := range placeholders {
+		if !seen[p.Name] {
+			seen[p.Name] = true
+			names = append(names, p.Name)
+		}
+	}
+	
+	return names, nil
+}
+
 // getPlaceholderValue gets the value for a placeholder
 func (w *WordProcessor) getPlaceholderValue(name string, values map[string]interface{}) string {
 	return w.parser.getValueForPlaceholder(name, values)

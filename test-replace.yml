@@ -1,0 +1,6 @@
+- old: "version 1.0"
+  new: "version 2.0"
+- old: "2023"
+  new: "2024"
+- old: "old text"
+  new: "new text"

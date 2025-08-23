@@ -2,13 +2,16 @@ package openai
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"net/http"
 	"time"
 
 	pkgErrors "github.com/pyhub/pyhub-docs/internal/errors"
+	"github.com/pyhub/pyhub-docs/internal/retry"
 )
 
 const (
@@ -18,9 +21,10 @@ const (
 
 // Client represents an OpenAI API client
 type Client struct {
-	apiKey     string
-	apiURL     string
-	httpClient *http.Client
+	apiKey      string
+	apiURL      string
+	httpClient  *http.Client
+	retryConfig retry.Config
 }
 
 // NewClient creates a new OpenAI API client
@@ -29,12 +33,20 @@ func NewClient(apiKey string) (*Client, error) {
 		return nil, pkgErrors.NewValidationError("apiKey", apiKey, "API key is required")
 	}
 
+	// Set up retry configuration
+	retryConfig := retry.DefaultConfig()
+	retryConfig.MaxRetries = 3
+	retryConfig.InitialDelay = 1 * time.Second
+	retryConfig.MaxDelay = 10 * time.Second
+	retryConfig.RetryableCheck = isRetryableOpenAIError
+
 	return &Client{
 		apiKey: apiKey,
 		apiURL: defaultAPIURL,
 		httpClient: &http.Client{
 			Timeout: 30 * time.Second,
 		},
+		retryConfig: retryConfig,
 	}, nil
 }
 
@@ -80,6 +92,13 @@ type APIError struct {
 
 // GenerateContent generates content based on the given prompt
 func (c *Client) GenerateContent(prompt string, options GenerateOptions) (string, error) {
+	// Use GenerateContentWithContext with a default context
+	ctx := context.Background()
+	return c.GenerateContentWithContext(ctx, prompt, options)
+}
+
+// GenerateContentWithContext generates content with context and retry support
+func (c *Client) GenerateContentWithContext(ctx context.Context, prompt string, options GenerateOptions) (string, error) {
 	// Build system message based on content type
 	systemMessage := c.buildSystemMessage(options.ContentType)
 	
@@ -100,57 +119,66 @@ func (c *Client) GenerateContent(prompt string, options GenerateOptions) (string
 		return "", fmt.Errorf("failed to marshal request: %w", err)
 	}
 
-	// Create HTTP request
-	httpReq, err := http.NewRequest("POST", c.apiURL, bytes.NewBuffer(jsonData))
-	if err != nil {
-		return "", fmt.Errorf("failed to create request: %w", err)
-	}
-
-	// Set headers
-	httpReq.Header.Set("Content-Type", "application/json")
-	httpReq.Header.Set("Authorization", fmt.Sprintf("Bearer %s", c.apiKey))
-
-	// Send the request
-	resp, err := c.httpClient.Do(httpReq)
-	if err != nil {
-		return "", fmt.Errorf("failed to send request: %w", err)
-	}
-	defer resp.Body.Close()
-
-	// Read response body
-	body, err := io.ReadAll(resp.Body)
-	if err != nil {
-		return "", fmt.Errorf("failed to read response: %w", err)
-	}
-
-	// Check for HTTP errors
-	if resp.StatusCode != http.StatusOK {
-		var apiError struct {
-			Error APIError `json:"error"`
+	// Execute with retry logic
+	return retry.DoWithResult(ctx, c.retryConfig, func() (string, error) {
+		// Create HTTP request
+		httpReq, err := http.NewRequestWithContext(ctx, "POST", c.apiURL, bytes.NewBuffer(jsonData))
+		if err != nil {
+			return "", fmt.Errorf("failed to create request: %w", err)
 		}
-		if err := json.Unmarshal(body, &apiError); err == nil && apiError.Error.Message != "" {
-			return "", fmt.Errorf("OpenAI API error: %s", apiError.Error.Message)
+
+		// Set headers
+		httpReq.Header.Set("Content-Type", "application/json")
+		httpReq.Header.Set("Authorization", fmt.Sprintf("Bearer %s", c.apiKey))
+
+		// Send the request
+		resp, err := c.httpClient.Do(httpReq)
+		if err != nil {
+			return "", fmt.Errorf("failed to send request: %w", err)
 		}
-		return "", fmt.Errorf("OpenAI API returned status %d: %s", resp.StatusCode, string(body))
-	}
+		defer resp.Body.Close()
 
-	// Parse the response
-	var chatResp ChatCompletionResponse
-	if err := json.Unmarshal(body, &chatResp); err != nil {
-		return "", fmt.Errorf("failed to parse response: %w", err)
-	}
+		// Read response body
+		body, err := io.ReadAll(resp.Body)
+		if err != nil {
+			return "", fmt.Errorf("failed to read response: %w", err)
+		}
 
-	// Check for API error in response
-	if chatResp.Error != nil {
-		return "", fmt.Errorf("OpenAI API error: %s", chatResp.Error.Message)
-	}
+		// Check for HTTP errors
+		if resp.StatusCode != http.StatusOK {
+			var apiError struct {
+				Error APIError `json:"error"`
+			}
+			if err := json.Unmarshal(body, &apiError); err == nil && apiError.Error.Message != "" {
+				// Return error with status code for retry logic
+				return "", &OpenAIError{
+					StatusCode: resp.StatusCode,
+					Message:    apiError.Error.Message,
+					Type:       apiError.Error.Type,
+					Code:       apiError.Error.Code,
+				}
+			}
+			return "", retry.NewHTTPError(resp.StatusCode, string(body))
+		}
 
-	// Extract the generated content
-	if len(chatResp.Choices) == 0 {
-		return "", fmt.Errorf("no content generated")
-	}
+		// Parse the response
+		var chatResp ChatCompletionResponse
+		if err := json.Unmarshal(body, &chatResp); err != nil {
+			return "", fmt.Errorf("failed to parse response: %w", err)
+		}
 
-	return chatResp.Choices[0].Message.Content, nil
+		// Check for API error in response
+		if chatResp.Error != nil {
+			return "", fmt.Errorf("OpenAI API error: %s", chatResp.Error.Message)
+		}
+
+		// Extract the generated content
+		if len(chatResp.Choices) == 0 {
+			return "", fmt.Errorf("no content generated")
+		}
+
+		return chatResp.Choices[0].Message.Content, nil
+	})
 }
 
 // buildSystemMessage creates appropriate system message based on content type
@@ -185,4 +213,53 @@ func DefaultGenerateOptions() GenerateOptions {
 		MaxTokens:   2000,
 		Temperature: 0.7,
 	}
+}
+
+// OpenAIError represents an error from the OpenAI API with additional metadata
+type OpenAIError struct {
+	StatusCode int
+	Message    string
+	Type       string
+	Code       string
+}
+
+func (e *OpenAIError) Error() string {
+	if e.StatusCode != 0 {
+		return fmt.Sprintf("OpenAI API error (HTTP %d): %s", e.StatusCode, e.Message)
+	}
+	return fmt.Sprintf("OpenAI API error: %s", e.Message)
+}
+
+// isRetryableOpenAIError determines if an OpenAI error should be retried
+func isRetryableOpenAIError(err error) bool {
+	if err == nil {
+		return false
+	}
+
+	// Check for OpenAI specific errors
+	var openAIErr *OpenAIError
+	if errors.As(err, &openAIErr) {
+		// Retry on rate limits and server errors
+		switch openAIErr.StatusCode {
+		case http.StatusTooManyRequests, // 429
+		     http.StatusInternalServerError, // 500
+		     http.StatusBadGateway, // 502
+		     http.StatusServiceUnavailable, // 503
+		     http.StatusGatewayTimeout: // 504
+			return true
+		}
+		
+		// Check for specific error codes
+		if openAIErr.Code == "rate_limit_exceeded" || openAIErr.Type == "server_error" {
+			return true
+		}
+	}
+
+	// Fall back to default retry logic
+	return retry.DefaultRetryableCheck(err)
+}
+
+// SetRetryConfig allows customizing the retry configuration
+func (c *Client) SetRetryConfig(config retry.Config) {
+	c.retryConfig = config
 }

@@ -72,6 +72,37 @@ func (p *PowerPointProcessor) ValidateTemplate(templatePath string, values map[s
 	return missing, nil
 }
 
+// ExtractPlaceholders extracts all placeholders from the template
+func (p *PowerPointProcessor) ExtractPlaceholders(templatePath string) ([]string, error) {
+	// Open template document
+	doc, err := document.OpenPowerPointDocument(templatePath)
+	if err != nil {
+		return nil, fmt.Errorf("failed to open template: %w", err)
+	}
+	defer doc.Close()
+	
+	// Get document text
+	text, err := doc.GetText()
+	if err != nil {
+		return nil, fmt.Errorf("failed to get text from template: %w", err)
+	}
+	
+	// Find all placeholders
+	placeholders := p.parser.FindPlaceholders(text)
+	
+	// Extract unique placeholder names
+	seen := make(map[string]bool)
+	names := make([]string, 0)
+	for _, placeholder := range placeholders {
+		if !seen[placeholder.Name] {
+			seen[placeholder.Name] = true
+			names = append(names, placeholder.Name)
+		}
+	}
+	
+	return names, nil
+}
+
 // getPlaceholderValue gets the value for a placeholder
 func (p *PowerPointProcessor) getPlaceholderValue(name string, values map[string]interface{}) string {
 	return p.parser.getValueForPlaceholder(name, values)

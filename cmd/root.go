@@ -18,6 +18,7 @@ var (
 	quiet    bool
 	langFlag string
 	noColor  bool
+	logLevel string
 	
 	// Global configuration instance
 	appConfig *config.Config
@@ -56,7 +57,7 @@ func Execute() {
 }
 
 func init() {
-	cobra.OnInitialize(initConfig, initI18n, initUI)
+	cobra.OnInitialize(initConfig, initI18n, initUI, initLogLevel)
 
 	// Global flags
 	rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is $HOME/.pyhub/config.yml)")
@@ -64,6 +65,7 @@ func init() {
 	rootCmd.PersistentFlags().BoolVarP(&quiet, "quiet", "q", false, "suppress non-error output")
 	rootCmd.PersistentFlags().StringVar(&langFlag, "lang", "", i18n.T(i18n.MsgFlagLang))
 	rootCmd.PersistentFlags().BoolVar(&noColor, "no-color", false, "disable colored output")
+	rootCmd.PersistentFlags().StringVar(&logLevel, "log-level", "info", "log level (debug|info|warn|error)")
 
 	// Version template
 	rootCmd.SetVersionTemplate(fmt.Sprintf(`{{with .Name}}{{printf "%%s version information:\n" .}}{{end}}
@@ -140,4 +142,28 @@ func initUI() {
 	} else if os.Getenv("FORCE_COLOR") != "" {
 		ui.EnableColor()
 	}
+}
+
+// initLogLevel initializes the log level
+func initLogLevel() {
+	// Set log level from flag or environment variable
+	level := logLevel
+	if level == "" {
+		level = os.Getenv("DOX_LOG_LEVEL")
+	}
+	if level == "" {
+		level = "info" // default
+	}
+	
+	// If verbose flag is set, override to debug
+	if verbose {
+		level = "debug"
+	}
+	
+	// If quiet flag is set, override to error
+	if quiet {
+		level = "error"
+	}
+	
+	ui.SetLogLevel(ui.ParseLogLevel(level))
 }

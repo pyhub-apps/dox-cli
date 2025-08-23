@@ -19,6 +19,8 @@ var (
 	setValues    []string
 	templateOut  string
 	templateForce bool
+	templateDryRun bool
+	templateJsonOutput bool
 )
 
 // templateCmd represents the template command
@@ -58,6 +60,8 @@ func init() {
 	templateCmd.Flags().StringArrayVar(&setValues, "set", []string{}, "Set individual values (format: key=value)")
 	templateCmd.Flags().StringVarP(&templateOut, "output", "o", "", "Output file path (required)")
 	templateCmd.Flags().BoolVar(&templateForce, "force", false, "Overwrite existing output file")
+	templateCmd.Flags().BoolVar(&templateDryRun, "dry-run", false, "Preview operation without creating files")
+	templateCmd.Flags().BoolVar(&templateJsonOutput, "json", false, "Output in JSON format")
 
 	templateCmd.MarkFlagRequired("template")
 	templateCmd.MarkFlagRequired("output")
@@ -125,6 +129,98 @@ func runTemplate(cmd *cobra.Command, args []string) error {
 
 	// Determine document type from template extension
 	ext := strings.ToLower(filepath.Ext(templatePath))
+	
+	// Handle dry-run mode
+	if templateDryRun {
+		// Get template information
+		var placeholders []string
+		var templateType string
+		
+		switch ext {
+		case ".docx":
+			processor := template.NewWordProcessor()
+			foundPlaceholders, err := processor.ExtractPlaceholders(templatePath)
+			if err != nil {
+				return fmt.Errorf("failed to extract placeholders: %w", err)
+			}
+			placeholders = foundPlaceholders
+			templateType = "Word Document"
+		case ".pptx":
+			processor := template.NewPowerPointProcessor()
+			foundPlaceholders, err := processor.ExtractPlaceholders(templatePath)
+			if err != nil {
+				return fmt.Errorf("failed to extract placeholders: %w", err)
+			}
+			placeholders = foundPlaceholders
+			templateType = "PowerPoint Presentation"
+		default:
+			return fmt.Errorf("unsupported template format: %s", ext)
+		}
+		
+		// Check which placeholders will be replaced
+		replaced := make([]string, 0)
+		missing := make([]string, 0)
+		
+		for _, placeholder := range placeholders {
+			if _, exists := values[placeholder]; exists {
+				replaced = append(replaced, placeholder)
+			} else {
+				missing = append(missing, placeholder)
+			}
+		}
+		
+		if templateJsonOutput {
+			// JSON output for dry-run
+			dryRunInfo := map[string]interface{}{
+				"operation": "template",
+				"template": map[string]interface{}{
+					"path": templatePath,
+					"type": templateType,
+				},
+				"placeholders": map[string]interface{}{
+					"found":    placeholders,
+					"replaced": replaced,
+					"missing":  missing,
+				},
+				"values": values,
+				"output": templateOut,
+			}
+			
+			jsonBytes, _ := json.MarshalIndent(dryRunInfo, "", "  ")
+			fmt.Println(string(jsonBytes))
+		} else {
+			// Human-readable output for dry-run
+			fmt.Println("=== DRY-RUN MODE ===")
+			fmt.Println()
+			fmt.Printf("Template: %s (%s)\n", templatePath, templateType)
+			fmt.Printf("Output:   %s\n", templateOut)
+			fmt.Println()
+			
+			fmt.Printf("Placeholders found: %d\n", len(placeholders))
+			if len(placeholders) > 0 {
+				fmt.Println("  " + strings.Join(placeholders, ", "))
+			}
+			fmt.Println()
+			
+			fmt.Printf("Values to be replaced: %d\n", len(replaced))
+			if len(replaced) > 0 {
+				for _, key := range replaced {
+					fmt.Printf("  {{%s}} → %v\n", key, values[key])
+				}
+			}
+			fmt.Println()
+			
+			if len(missing) > 0 {
+				fmt.Printf("Missing values: %d\n", len(missing))
+				fmt.Println("  " + strings.Join(missing, ", "))
+				fmt.Println()
+			}
+			
+			fmt.Println("No files were created. Remove --dry-run to execute.")
+		}
+		
+		return nil
+	}
 	
 	switch ext {
 	case ".docx":

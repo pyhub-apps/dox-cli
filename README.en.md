@@ -28,11 +28,12 @@ A powerful CLI tool for document automation, text replacement, and AI-powered co
 - Code blocks, lists, tables, and more
 
 ### 🤖 AI Content Generation
-- Generate blog posts, reports, and summaries using OpenAI
-- Multiple content types and customizable parameters
+- Generate content using OpenAI (GPT) or Claude AI
+- Multiple content types: blogs, reports, summaries, emails, proposals
+- Support for latest models: GPT-4, Claude 3 (Opus, Sonnet, Haiku)
 - Temperature and token control for output fine-tuning
-- Support for GPT-3.5 and GPT-4 models
-- Configuration file support for API keys
+- Auto-detect AI provider from model name
+- Configuration file support for multiple API keys
 
 ### 📋 Template Processing
 - Process Word/PowerPoint templates with placeholders
@@ -164,12 +165,13 @@ dox template --template report.pptx --output final.pptx \
 ```
 
 ### AI Content Generation
+
+**Using OpenAI (GPT):**
 ```bash
 # Set OpenAI API key
-export OPENAI_API_KEY="your-api-key"
-
+export OPENAI_API_KEY="your-openai-api-key"
 # Or use configuration file
-dox config --set openai.api_key "your-api-key"
+dox config --set openai.api_key "your-openai-api-key"
 
 # Generate a blog post
 dox generate --type blog --prompt "Best practices for Go testing" --output blog.md
@@ -183,6 +185,28 @@ dox generate --type custom \
   --temperature 0.7 \
   --max-tokens 2000 \
   --output tutorial.md
+```
+
+**Using Claude AI:**
+```bash
+# Set Claude API key
+export ANTHROPIC_API_KEY="your-anthropic-api-key"
+# Or use configuration file
+dox config --set claude.api_key "your-anthropic-api-key"
+
+# Generate with Claude (auto-detected from model name)
+dox generate --type blog --prompt "AI ethics guidelines" \
+  --model claude-3-sonnet-20240229 --output blog.md
+
+# Use Claude Opus for complex analysis
+dox generate --provider claude --model claude-3-opus-20240229 \
+  --prompt "Analyze large-scale system architecture" \
+  --max-tokens 4000 --output analysis.md
+
+# Use Claude Haiku for quick summaries
+dox generate --provider claude --model claude-3-haiku-20240307 \
+  --type summary --prompt "$(cat long-document.md)" \
+  --output summary.md
 ```
 
 ### Configuration Management
@@ -216,10 +240,17 @@ Create `~/.pyhub/config.yml`:
 ```yaml
 # OpenAI settings
 openai:
-  api_key: "your-api-key"  # Or use OPENAI_API_KEY env var
-  base_url: "https://api.openai.com/v1"
-  timeout: 120
-  max_retries: 3
+  api_key: "your-openai-api-key"  # Or use OPENAI_API_KEY env var
+  model: "gpt-3.5-turbo"
+  max_tokens: 2000
+  temperature: 0.7
+
+# Claude settings
+claude:
+  api_key: "your-anthropic-api-key"  # Or use ANTHROPIC_API_KEY env var
+  model: "claude-3-sonnet-20240229"
+  max_tokens: 2000
+  temperature: 0.7
 
 # Document replacement settings
 replace:
@@ -230,7 +261,7 @@ replace:
 
 # Content generation settings
 generate:
-  model: "gpt-3.5-turbo"
+  model: "gpt-3.5-turbo"  # or claude model name
   max_tokens: 2000
   temperature: 0.7
   content_type: "blog"

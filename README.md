@@ -1,38 +1,78 @@
-# dox
+# dox - Document Automation CLI 🚀
 
-[![Go Version](https://img.shields.io/badge/go-1.21-blue.svg)](https://go.dev/)
+[![Go Version](https://img.shields.io/badge/Go-1.21%2B-00ADD8?style=flat&logo=go)](https://go.dev/)
 [![Release](https://img.shields.io/github/v/release/pyhub-kr/pyhub-documents-cli)](https://github.com/pyhub-kr/pyhub-documents-cli/releases)
 [![HeadVer](https://img.shields.io/badge/versioning-HeadVer-blue)](https://github.com/line/headver)
-[![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
+[![License](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
+[![Issues](https://img.shields.io/github/issues/pyhub-kr/pyhub-documents-cli)](https://github.com/pyhub-kr/pyhub-documents-cli/issues)
 
-문서 자동화 및 AI 기반 콘텐츠 생성을 위한 강력한 CLI 도구입니다.
+문서 자동화 및 AI 기반 콘텐츠 생성을 위한 강력한 CLI 도구입니다. 아름다운 프로그레스 바와 색상 출력으로 Word/PowerPoint 문서를 효율적으로 처리합니다.
+
+한국어 | [English](README.en.md)
 
 ## 🎯 소개
 
-`dox`는 반복적인 문서 작업을 자동화하고, 마크다운을 Office 문서로 변환하며, 템플릿 기반 문서 생성을 지원하는 Go 언어 기반 CLI 도구입니다.
+`dox`는 반복적인 문서 작업을 자동화하고, 마크다운을 Office 문서로 변환하며, 템플릿 기반 문서 생성과 AI 콘텐츠 생성을 지원하는 Go 언어 기반 CLI 도구입니다.
 
 ### 왜 dox인가?
 
 - 📝 **수작업 제거**: 수십, 수백 개의 문서에서 텍스트를 일괄 변경
 - 🔄 **형식 변환**: 마크다운으로 작성하고 Word/PowerPoint로 자동 변환
 - 📋 **템플릿 활용**: 계약서, 보고서 등 반복 문서를 템플릿으로 자동 생성
+- 🤖 **AI 통합**: OpenAI를 활용한 콘텐츠 자동 생성
 - 🌍 **한국어 지원**: 한국어 인터페이스 완벽 지원
 - 🚀 **간단한 설치**: 단일 실행 파일, 별도 의존성 없음
+- 🎨 **아름다운 UI**: 색상 출력과 프로그레스 바로 시각적 피드백 제공
 
 ## ✨ 주요 기능
 
-### 구현 완료 ✅
+### 🔄 문서 텍스트 일괄 치환
+- Word(.docx)와 PowerPoint(.pptx) 파일의 텍스트 일괄 변경
+- YAML 기반 규칙 파일로 쉬운 관리
+- 재귀적 디렉토리 처리 및 패턴 제외 기능
+- 동시 처리로 40-70% 성능 향상
+- 자동 백업 생성 기능
+- 프로그레스 바와 색상 출력으로 진행 상황 추적
 
-- **문서 텍스트 일괄 치환**: Word/PowerPoint 문서의 텍스트를 YAML 규칙으로 한 번에 변경
-- **마크다운 변환**: Markdown 파일을 Word(.docx) 또는 PowerPoint(.pptx)로 변환
-- **템플릿 문서 처리**: 플레이스홀더가 포함된 템플릿 문서를 데이터로 채워 완성
-- **국제화(i18n)**: 한국어/영어 인터페이스 자동 감지 및 선택
-- **크로스 플랫폼**: Windows, macOS, Linux 모두 지원
+### 📝 문서 생성
+- 마크다운을 Word 또는 PowerPoint로 변환
+- 템플릿 기반 문서 생성
+- 스타일과 포맷 보존
+- 복잡한 문서 구조 지원
+- 코드 블록, 리스트, 테이블 등 모든 마크다운 요소 지원
 
-### 개발 예정 🚧
+### 🤖 AI 콘텐츠 생성
+- OpenAI를 활용한 블로그, 보고서, 요약 생성
+- 다양한 콘텐츠 타입과 커스터마이징 가능한 파라미터
+- Temperature와 토큰 제어로 출력 미세 조정
+- GPT-3.5와 GPT-4 모델 지원
+- 설정 파일을 통한 API 키 관리
 
-- **AI 콘텐츠 생성**: OpenAI를 활용한 문서 내용 자동 생성 (Phase 2)
-- **HWP 지원**: 한글(HWP) 파일 형식 지원 (Phase 3)
+### 📋 템플릿 처리
+- 플레이스홀더가 있는 Word/PowerPoint 템플릿 처리
+- YAML/JSON 기반 데이터 주입
+- 복잡한 데이터 구조 지원
+- 누락된 플레이스홀더 검증 및 감지
+- 배치 처리 기능
+
+### 🎨 아름다운 UI
+- 더 나은 가독성을 위한 색상 출력
+- 긴 작업을 위한 프로그레스 바
+- AI 작업을 위한 로딩 스피너
+- 파일 타입별 색상 구분
+- 시각적 서식이 있는 요약 통계
+- NO_COLOR 환경 변수 지원
+
+### 🌍 국제화
+- 한국어와 영어 인터페이스 완벽 지원
+- 시스템 로케일 기반 자동 언어 감지
+- --lang 플래그로 쉬운 언어 전환
+
+### ⚙️ 설정 관리
+- YAML 기반 설정 파일 시스템
+- 환경 변수 지원
+- 우선순위: CLI 플래그 > 설정 파일 > 환경 변수
+- 전역 설정과 명령별 설정
 
 ## 📦 설치
 
@@ -52,7 +92,7 @@ Move-Item dox.exe C:\Windows\System32\
 # Intel Mac
 curl -L https://github.com/pyhub-kr/pyhub-documents-cli/releases/latest/download/dox-darwin-amd64 -o dox
 
-# Apple Silicon (M1/M2)
+# Apple Silicon (M1/M2/M3)
 curl -L https://github.com/pyhub-kr/pyhub-documents-cli/releases/latest/download/dox-darwin-arm64 -o dox
 
 # 실행 권한 부여 및 설치
@@ -62,9 +102,23 @@ sudo mv dox /usr/local/bin/
 
 #### Linux
 ```bash
+# AMD64
 curl -L https://github.com/pyhub-kr/pyhub-documents-cli/releases/latest/download/dox-linux-amd64 -o dox
+
+# ARM64
+curl -L https://github.com/pyhub-kr/pyhub-documents-cli/releases/latest/download/dox-linux-arm64 -o dox
+
 chmod +x dox
 sudo mv dox /usr/local/bin/
+```
+
+### 설치 확인
+```bash
+# 버전 확인
+dox version
+
+# 도움말 확인
+dox --help
 ```
 
 ### 소스에서 빌드
@@ -77,12 +131,15 @@ git clone https://github.com/pyhub-kr/pyhub-documents-cli.git
 cd pyhub-documents-cli
 
 # 빌드
-make build
+go build -o dox
+
+# 또는 전역 설치
+go install
 
 # 특정 플랫폼용 빌드
-make build-windows  # Windows
-make build-darwin   # macOS
-make build-linux    # Linux
+GOOS=windows GOARCH=amd64 go build -o dox.exe
+GOOS=darwin GOARCH=arm64 go build -o dox
+GOOS=linux GOARCH=amd64 go build -o dox
 ```
 
 ## 🚀 빠른 시작
@@ -119,6 +176,12 @@ dox replace --rules rules.yml --path ./문서폴더 --dry-run
 
 # 백업 생성 후 처리
 dox replace --rules rules.yml --path ./문서폴더 --backup
+
+# 동시 처리로 성능 향상
+dox replace --rules rules.yml --path ./문서폴더 --concurrent --max-workers 8
+
+# 특정 파일 제외
+dox replace --rules rules.yml --path . --exclude "*.backup"
 ```
 
 ### 2. 마크다운을 Office 문서로 변환
@@ -129,6 +192,9 @@ dox replace --rules rules.yml --path ./문서폴더 --backup
 ```bash
 # 기본 변환
 dox create --from 주간보고서.md --output 주간보고서.docx
+
+# 템플릿 사용
+dox create --from 내용.md --template 회사템플릿.docx --output 최종보고서.docx
 
 # 기존 파일 덮어쓰기
 dox create --from 월간보고서.md --output 월간보고서.docx --force
@@ -142,8 +208,10 @@ dox create --from 발표자료.md --output 발표자료.pptx
 
 **PowerPoint 변환 규칙:**
 - `#` (H1): 새 슬라이드 생성
-- `##` (H2): 섹션 첫 번째면 슬라이드 제목, 아니면 굵은 텍스트
-- 리스트, 문단, 코드 블록 등 모두 지원
+- `##` (H2): 슬라이드 제목 또는 굵은 텍스트
+- `###`-`######`: 굵은 텍스트로 변환
+- 리스트: 글머리 기호로 변환
+- 코드 블록: 고정폭 폰트로 표시
 
 **예시 마크다운 (발표자료.md):**
 ```markdown
@@ -205,6 +273,141 @@ dox template --template 보고서_템플릿.pptx --output 보고서_202501.pptx 
 dox template --template 템플릿.docx --values data.json --output 결과.docx
 ```
 
+### 4. AI 콘텐츠 생성
+
+OpenAI (GPT) 또는 Claude를 활용하여 다양한 콘텐츠를 생성합니다.
+
+#### API 키 설정
+
+**OpenAI 사용 시:**
+```bash
+# 환경 변수 설정
+export OPENAI_API_KEY="your-openai-api-key"
+
+# 또는 설정 파일 사용
+dox config --set openai.api_key "your-openai-api-key"
+```
+
+**Claude 사용 시:**
+```bash
+# 환경 변수 설정
+export ANTHROPIC_API_KEY="your-anthropic-api-key"
+# 또는
+export CLAUDE_API_KEY="your-anthropic-api-key"
+
+# 또는 설정 파일 사용
+dox config --set claude.api_key "your-anthropic-api-key"
+```
+
+#### 콘텐츠 생성
+
+**OpenAI (GPT) 사용:**
+```bash
+# 블로그 포스트 생성 (기본: GPT-3.5)
+dox generate --type blog --prompt "Go 테스팅 베스트 프랙티스" --output blog.md
+
+# GPT-4로 보고서 생성
+dox generate --type report --prompt "3분기 매출 분석" --model gpt-4 --output report.md
+
+# 커스텀 파라미터로 생성
+dox generate --type custom \
+  --prompt "Docker에 대한 기술 튜토리얼 작성" \
+  --temperature 0.7 \
+  --max-tokens 2000 \
+  --output tutorial.md
+```
+
+**Claude 사용:**
+```bash
+# Claude로 블로그 생성 (모델 이름으로 자동 감지)
+dox generate --type blog --prompt "AI 윤리 가이드라인" \
+  --model claude-3-sonnet-20240229 --output blog.md
+
+# Claude Opus로 복잡한 분석
+dox generate --provider claude --model claude-3-opus-20240229 \
+  --prompt "대규모 시스템 아키텍처 분석" \
+  --max-tokens 4000 --output analysis.md
+
+# Claude Haiku로 빠른 요약
+dox generate --provider claude --model claude-3-haiku-20240307 \
+  --type summary --prompt "$(cat long-document.md)" \
+  --output summary.md
+
+# 이메일 작성
+dox generate --provider claude --type email \
+  --prompt "프로젝트 지연에 대한 사과 메일" \
+  --output email.md
+```
+
+**지원하는 AI 모델:**
+- **OpenAI**: GPT-3.5-Turbo, GPT-4, GPT-4-Turbo
+- **Claude**: Claude 3 Opus (최고 성능), Claude 3 Sonnet (균형), Claude 3 Haiku (빠른 응답)
+
+### 5. 설정 관리
+
+```bash
+# 설정 파일 초기화
+dox config --init
+
+# 모든 설정 보기
+dox config --list
+
+# 설정값 지정
+dox config --set openai.api_key "your-key"
+dox config --set global.lang "ko"
+dox config --set replace.concurrent true
+
+# 설정값 조회
+dox config --get openai.model
+```
+
+## ⚙️ 설정 파일
+
+dox는 명령줄 플래그와 설정 파일을 모두 지원합니다. 우선순위:
+1. 명령줄 플래그 (최우선)
+2. 설정 파일
+3. 환경 변수 (최하위)
+
+### 설정 파일 위치
+
+`~/.pyhub/config.yml`:
+
+```yaml
+# OpenAI 설정
+openai:
+  api_key: "your-openai-api-key"  # 또는 OPENAI_API_KEY 환경 변수 사용
+  model: "gpt-3.5-turbo"
+  max_tokens: 2000
+  temperature: 0.7
+
+# Claude 설정
+claude:
+  api_key: "your-anthropic-api-key"  # 또는 ANTHROPIC_API_KEY 환경 변수 사용
+  model: "claude-3-sonnet-20240229"
+  max_tokens: 2000
+  temperature: 0.7
+
+# 문서 치환 설정
+replace:
+  backup: true
+  recursive: true
+  concurrent: true
+  max_workers: 8
+
+# 콘텐츠 생성 설정
+generate:
+  model: "gpt-3.5-turbo"  # 또는 claude 모델명
+  max_tokens: 2000
+  temperature: 0.7
+  content_type: "blog"
+
+# 전역 설정
+global:
+  verbose: false
+  quiet: false
+  lang: "ko"  # 또는 "en" (영어)
+```
+
 ## 🌍 다국어 지원
 
 ### 언어 자동 감지
@@ -213,15 +416,19 @@ dox template --template 템플릿.docx --values data.json --output 결과.docx
 
 **감지 우선순위:**
 1. `--lang` 플래그
-2. `LANG` 환경 변수
-3. `LC_ALL` 환경 변수
-4. 기본값 (영어)
+2. 설정 파일의 `global.lang`
+3. `LANG` 환경 변수
+4. `LC_ALL` 환경 변수
+5. 기본값 (영어)
 
-### 한국어 인터페이스 사용
+### 사용 예시
 
 ```bash
 # 명시적으로 한국어 지정
 dox --lang ko replace --rules rules.yml --path ./docs
+
+# 설정 파일에서 기본 언어 지정
+dox config --set global.lang ko
 
 # 시스템 언어가 한국어인 경우 자동 감지
 $ echo $LANG
@@ -232,18 +439,14 @@ $ dox create --from 보고서.md --output 보고서.docx
 ✅ 보고서.docx 생성 완료
 ```
 
-### 영어 인터페이스 사용
-
-```bash
-# 명시적으로 영어 지정
-dox --lang en replace --rules rules.yml --path ./docs
-
-# 결과
-Converting report.md to Word document...
-✅ Successfully created report.docx
-```
-
 ## 📖 명령어 상세 가이드
+
+### 전역 플래그
+- `--config` - 설정 파일 경로 지정
+- `--verbose, -v` - 자세한 출력
+- `--quiet, -q` - 조용한 모드 (에러만 출력)
+- `--no-color` - 색상 출력 비활성화
+- `--lang` - 인터페이스 언어 (ko, en)
 
 ### `replace` - 텍스트 일괄 치환
 
@@ -256,39 +459,8 @@ Word와 PowerPoint 문서의 텍스트를 YAML 규칙에 따라 일괄 변경합
 - `--backup`: 원본 파일 백업 생성
 - `--recursive`: 하위 디렉토리 포함 (기본값: true)
 - `--exclude`: 제외할 파일 패턴
-
-#### 규칙 파일 형식
-```yaml
-# 단순 치환
-- old: "찾을 텍스트"
-  new: "바꿀 텍스트"
-
-# 여러 규칙
-- old: "v1.0.0"
-  new: "v2.0.0"
-- old: "2024"
-  new: "2025"
-- old: "구버전"
-  new: "신버전"
-```
-
-#### 실제 사용 예시
-```bash
-# 모든 문서의 연도 업데이트
-cat > year-update.yml << EOF
-- old: "2024년"
-  new: "2025년"
-- old: "2024-"
-  new: "2025-"
-- old: "FY2024"
-  new: "FY2025"
-EOF
-
-dox replace --rules year-update.yml --path ./연간보고서 --backup
-
-# 특정 파일 제외
-dox replace --rules rules.yml --path . --exclude "*.backup"
-```
+- `--concurrent`: 동시 처리 활성화
+- `--max-workers`: 워커 수 (기본값: CPU 코어 수)
 
 ### `create` - 마크다운 변환
 
@@ -297,43 +469,9 @@ dox replace --rules rules.yml --path . --exclude "*.backup"
 #### 옵션
 - `--from, -f`: 입력 마크다운 파일 (필수)
 - `--output, -o`: 출력 파일 경로 (필수)
+- `--template, -t`: 스타일링을 위한 템플릿 문서
 - `--format`: 출력 형식 (docx/pptx, 확장자에서 자동 감지)
 - `--force`: 기존 파일 덮어쓰기
-
-#### Word 변환 특징
-- 모든 마크다운 요소 지원
-- 제목 계층 구조 유지
-- 리스트, 코드 블록, 인용문 스타일 적용
-
-#### PowerPoint 변환 규칙
-- `#` (H1): 새 슬라이드 생성 및 제목
-- `##` (H2): 슬라이드 내 섹션 제목
-- `###`-`######`: 굵은 텍스트로 변환
-- 리스트: 글머리 기호로 변환
-- 코드 블록: 고정폭 폰트로 표시
-
-#### 실제 사용 예시
-```bash
-# 주간 회의록 작성 워크플로우
-echo "# 주간 회의록 - 2025년 1월 1주차
-
-## 참석자
-- 김부장
-- 이과장
-- 박대리
-
-## 안건
-1. 프로젝트 진행 상황
-2. 다음 주 계획
-3. 이슈 사항
-
-## 결정 사항
-- 마감일 1주 연장
-- 추가 인력 투입" > 회의록.md
-
-# Word 문서로 변환
-dox create --from 회의록.md --output 회의록_20250101.docx
-```
 
 ### `template` - 템플릿 문서 처리
 
@@ -342,64 +480,155 @@ dox create --from 회의록.md --output 회의록_20250101.docx
 #### 옵션
 - `--template, -t`: 템플릿 문서 파일 (필수)
 - `--output, -o`: 출력 파일 경로 (필수)
-- `--values, -v`: 값을 포함한 YAML/JSON 파일
-- `--set, -s`: 개별 값 설정 (key=value 형식)
+- `--values`: 값을 포함한 YAML/JSON 파일
+- `--set`: 개별 값 설정 (key=value 형식)
 - `--force`: 기존 파일 덮어쓰기
 
-#### 플레이스홀더 형식
-템플릿 문서에서 `{{변수명}}` 형식을 사용합니다.
+### `generate` - AI 콘텐츠 생성
 
-#### 실제 사용 예시
+OpenAI를 활용하여 다양한 콘텐츠를 생성합니다.
 
-**견적서 자동 생성:**
+#### 옵션
+- `--prompt, -p`: 생성 프롬프트 (필수)
+- `--type, -t`: 콘텐츠 타입 (blog, report, summary, custom)
+- `--output, -o`: 출력 파일 경로
+- `--model`: AI 모델 (gpt-3.5-turbo, gpt-4)
+- `--max-tokens`: 최대 응답 토큰 수
+- `--temperature`: 창의성 레벨 (0.0-1.0)
+- `--api-key`: OpenAI API 키
 
-템플릿 (견적서_템플릿.docx):
-```
-견적서
+### `config` - 설정 관리
 
-수신: {{고객사}}
-담당자: {{담당자명}}
+설정 파일을 관리합니다.
 
-품목: {{제품명}}
-수량: {{수량}}
-단가: {{단가}}원
-총액: {{총액}}원
+#### 옵션
+- `--init`: 설정 파일 초기화
+- `--list`: 모든 설정값 나열
+- `--get <key>`: 특정 값 조회
+- `--set <key=value>`: 설정값 지정
 
-유효기간: {{유효기간}}
-```
+### `version` - 버전 정보
 
-값 파일 (견적_데이터.yml):
-```yaml
-고객사: "ABC 주식회사"
-담당자명: "김철수 과장"
-제품명: "소프트웨어 라이선스"
-수량: 10
-단가: "1,000,000"
-총액: "10,000,000"
-유효기간: "발행일로부터 30일"
-```
-
-실행:
 ```bash
+dox version
+# 출력:
+# dox version 1.2534.28
+#   Commit: abc123
+#   Built:  2025-01-01
+```
+
+## 📁 예제
+
+### 실제 사용 시나리오
+
+#### 시나리오 1: 연말 문서 업데이트
+```bash
+# 1. 규칙 파일 생성
+cat > year-end-update.yml << EOF
+- old: "2024년"
+  new: "2025년"
+- old: "4분기"
+  new: "1분기"
+- old: "연말"
+  new: "연초"
+EOF
+
+# 2. 모든 문서 백업 및 업데이트
+dox replace --rules year-end-update.yml \
+  --path ./company-docs \
+  --backup \
+  --concurrent
+
+# 3. 변경 보고서 생성
+dox generate --type report \
+  --prompt "2025년 문서 업데이트 완료 보고서 작성" \
+  --output update-report.md
+
+# 4. Word로 변환
+dox create --from update-report.md --output update-report.docx
+```
+
+#### 시나리오 2: 월간 보고서 자동화
+```bash
+#!/bin/bash
+# monthly-report.sh
+
+# 1. AI로 보고서 초안 생성
+dox generate --type report \
+  --prompt "$(cat metrics.txt) 기반 월간 성과 보고서 작성" \
+  --output draft.md
+
+# 2. 템플릿에 데이터 삽입
 dox template \
-  --template 견적서_템플릿.docx \
-  --values 견적_데이터.yml \
-  --output 견적서_ABC_20250101.docx
+  --template report-template.docx \
+  --values monthly-data.yml \
+  --output monthly-report.docx \
+  --set month="$(date +%B)" \
+  --set year="$(date +%Y)"
+
+# 3. 프레젠테이션 생성
+dox create --from draft.md --output presentation.pptx
+```
+
+더 많은 예제는 [examples/](examples/) 디렉토리를 참조하세요.
+
+## 🔧 고급 사용법
+
+### 성능 최적화
+
+대량 문서 처리 시 동시 처리 사용:
+```bash
+# 16개 워커로 처리
+dox replace --rules rules.yml --path ./large-docs \
+  --concurrent --max-workers 16
+
+# 진행 상황 모니터링
+dox replace --rules rules.yml --path ./docs \
+  --concurrent --verbose
+```
+
+### CI/CD 통합
+
+```yaml
+# .github/workflows/docs.yml
+name: Document Processing
+on:
+  push:
+    paths:
+      - 'docs/**'
+jobs:
+  process:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Install dox
+        run: |
+          curl -L https://github.com/pyhub-kr/pyhub-documents-cli/releases/latest/download/dox-Linux-x86_64 -o dox
+          chmod +x dox
+      - name: Process documents
+        run: |
+          ./dox replace --rules ci-rules.yml --path docs/
+          ./dox create --from CHANGELOG.md --output CHANGELOG.docx
 ```
 
 ## 🛠️ 개발
 
 ### 프로젝트 구조
 ```
-pyhub-docs/
+dox/
 ├── cmd/            # CLI 명령어 구현
 ├── internal/       # 내부 패키지
-│   ├── document/   # 문서 처리 로직
+│   ├── config/     # 설정 관리
+│   ├── errors/     # 커스텀 에러 타입
+│   ├── generate/   # AI 콘텐츠 생성
 │   ├── i18n/       # 국제화 지원
 │   ├── markdown/   # 마크다운 변환
+│   ├── openai/     # OpenAI API 클라이언트
 │   ├── replace/    # 텍스트 치환
-│   └── template/   # 템플릿 처리
+│   ├── template/   # 템플릿 처리
+│   └── ui/         # UI 컴포넌트 (프로그레스 바, 색상)
 ├── locales/        # 번역 파일
+├── examples/       # 사용 예제
 ├── scripts/        # 빌드 스크립트
 └── tests/          # 테스트 파일
 ```
@@ -412,6 +641,9 @@ go test ./...
 # 커버리지 확인
 go test -cover ./...
 
+# 레이스 조건 검사
+go test -race ./...
+
 # 특정 패키지 테스트
 go test ./internal/replace
 ```
@@ -419,13 +651,13 @@ go test ./internal/replace
 ### 빌드
 ```bash
 # 현재 플랫폼용 빌드
-make build
+go build -o dox
 
-# 모든 플랫폼용 빌드
+# 크로스 컴파일
 make build-all
 
-# 정리
-make clean
+# 릴리스 빌드 (최적화)
+go build -ldflags="-s -w" -o dox
 ```
 
 ## 🔢 버저닝 (HeadVer)
@@ -446,15 +678,9 @@ make clean
 - `1.2534.5`: 같은 주의 5번째 빌드
 - `2.2601.0`: 버전 2 (Breaking Change), 2026년 1주차
 
-### 버전 확인
-```bash
-dox version
-# 출력: dox version 1.2534.23
-```
-
 ## 🤝 기여하기
 
-프로젝트 개선에 참여해 주세요!
+프로젝트 개선에 참여해 주세요! 자세한 내용은 [CONTRIBUTING.md](CONTRIBUTING.md)를 참조하세요.
 
 ### 기여 방법
 1. 이슈를 먼저 생성하여 논의
@@ -469,6 +695,20 @@ dox version
 - `gofmt`로 코드 포맷팅
 - 테스트 커버리지 80% 이상 유지
 - 한국어/영어 i18n 지원 필수
+- Conventional Commits 사용
+
+## 🗺️ 로드맵
+
+- [ ] Excel 파일 지원 (.xlsx)
+- [ ] PDF 생성 및 처리
+- [ ] HWP (한글) 포맷 지원
+- [ ] 클라우드 스토리지 통합 (S3, Google Drive)
+- [ ] 웹 UI 인터페이스
+- [ ] 플러그인 시스템
+- [ ] 더 많은 AI 제공자 (Claude, Gemini, Local LLMs)
+- [ ] 문서 비교 및 diff 기능
+- [ ] 배치 처리 개선
+- [ ] Docker 컨테이너 지원
 
 ## 📄 라이선스
 
@@ -477,15 +717,19 @@ MIT 라이선스 - [LICENSE](LICENSE) 파일 참조
 ## 🙏 감사의 말
 
 - [Cobra](https://github.com/spf13/cobra) - CLI 프레임워크
+- [unioffice](https://github.com/unidoc/unioffice) - Office 문서 처리
 - [goldmark](https://github.com/yuin/goldmark) - 마크다운 파서
+- [progressbar](https://github.com/schollz/progressbar) - 프로그레스 표시
+- [color](https://github.com/fatih/color) - 터미널 색상
 - Go 커뮤니티의 훌륭한 오픈소스 라이브러리들
 
 ## 📞 지원
 
 - 🐛 버그 리포트: [Issues](https://github.com/pyhub-kr/pyhub-documents-cli/issues)
 - 💬 질문과 토론: [Discussions](https://github.com/pyhub-kr/pyhub-documents-cli/discussions)
-- 📧 이메일: support@pyhub.kr (예정)
+- 📧 이메일: support@pyhub.kr
+- 📚 문서: [Wiki](https://github.com/pyhub-kr/pyhub-documents-cli/wiki)
 
 ---
 
-**참고**: 이 프로젝트는 활발히 개발 중입니다. 로드맵의 기능들이 순차적으로 추가될 예정입니다.
+Made with ❤️ by [PyHub Korea](https://pyhub.kr)

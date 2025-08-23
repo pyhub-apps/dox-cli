@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"encoding/json"
 	"errors"
 	"fmt"
 	"os"
@@ -8,6 +9,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/pyhub/pyhub-docs/internal/document"
 	pkgErrors "github.com/pyhub/pyhub-docs/internal/errors"
 	"github.com/pyhub/pyhub-docs/internal/replace"
 	"github.com/pyhub/pyhub-docs/internal/ui"
@@ -15,14 +17,16 @@ import (
 )
 
 var (
-	rulesFile   string
-	targetPath  string
-	dryRun      bool
-	backup      bool
-	recursive   bool
-	excludeGlob string
-	concurrent  bool
-	maxWorkers  int
+	rulesFile       string
+	targetPath      string
+	replaceDryRun   bool
+	backup          bool
+	recursive       bool
+	excludeGlob     string
+	concurrent      bool
+	maxWorkers      int
+	replaceJsonOutput bool
+	showDiff        bool
 )
 
 // replaceCmd represents the replace command
@@ -73,7 +77,7 @@ Examples:
 		}
 
 		// Print rules if in dry-run mode
-		if dryRun {
+		if replaceDryRun {
 			ui.PrintHeader("Replacement Rules to Apply")
 			for i, rule := range rules {
 				ui.PrintStep(i+1, len(rules), fmt.Sprintf("Replace '%s' with '%s'", rule.Old, rule.New))
@@ -93,7 +97,7 @@ Examples:
 		}
 
 		// Create backup if requested
-		if backup && !dryRun {
+		if backup && !replaceDryRun {
 			if !quiet {
 				ui.PrintInfo("Creating backup of %s...", targetPath)
 			}
@@ -108,7 +112,7 @@ Examples:
 		// Process based on target type
 		if info.IsDir() {
 			// Process directory
-			if dryRun {
+			if replaceDryRun {
 				return previewDirectoryReplacements(targetPath, rules, recursive)
 			}
 			
@@ -122,6 +126,7 @@ Examples:
 					opts.MaxWorkers = maxWorkers
 				}
 				opts.ShowProgress = !quiet && !verbose
+				opts.Verbose = verbose
 				
 				if verbose {
 					ui.PrintInfo("Processing directory with %d workers...", opts.MaxWorkers)
@@ -144,7 +149,7 @@ Examples:
 				return pkgErrors.NewDocumentError(targetPath, ext, "unsupported format (only .docx and .pptx are supported)", pkgErrors.ErrUnsupportedFormat)
 			}
 
-			if dryRun {
+			if replaceDryRun {
 				ui.PrintInfo("Would process file: %s", targetPath)
 				return nil
 			}
@@ -228,14 +233,73 @@ func copyDir(src, dst string) error {
 }
 
 func previewDirectoryReplacements(dirPath string, rules []replace.Rule, recursive bool) error {
-	ui.PrintHeader("Files to Process")
+	type filePreview struct {
+		Path         string            `json:"path"`
+		Type         string            `json:"type"`
+		Replacements map[string]string `json:"replacements,omitempty"`
+		Count        int               `json:"replacementCount"`
+	}
 	
-	count := 0
+	var previews []filePreview
+	
+	if !replaceJsonOutput {
+		ui.PrintHeader("Files to Process")
+	}
+	
+	// Convert rules to replacement map
+	replacements := make(map[string]string)
+	for _, rule := range rules {
+		replacements[rule.Old] = rule.New
+	}
+	
 	// Use the new walk function with exclude support
 	err := replace.WalkDocumentFilesWithExclude(dirPath, recursive, excludeGlob, func(path string) error {
 		ext := strings.ToLower(filepath.Ext(path))
-		ui.PrintFileOperation("Preview", path, ext)
-		count++
+		
+		preview := filePreview{
+			Path: path,
+			Type: ext,
+		}
+		
+		// If diff mode is enabled, try to read the file and show what would change
+		if showDiff && !replaceJsonOutput {
+			// Try to read the document content
+			var doc document.Document
+			switch ext {
+			case ".docx":
+				d, err := document.OpenWordDocument(path)
+				if err == nil {
+					doc = d
+					defer d.Close()
+				}
+			case ".pptx":
+				d, err := document.OpenPowerPointDocument(path)
+				if err == nil {
+					doc = d
+					defer d.Close()
+				}
+			}
+			
+			if doc != nil {
+				text, err := doc.GetText()
+				if err == nil {
+					// Count replacements
+					for old := range replacements {
+						preview.Count += strings.Count(text, old)
+					}
+					
+					// Show diff preview
+					if preview.Count > 0 {
+						ui.ShowReplacementPreview(text, replacements, path)
+					}
+				}
+			}
+		} else if !replaceJsonOutput {
+			ui.PrintFileOperation("Preview", path, ext)
+		}
+		
+		preview.Replacements = replacements
+		previews = append(previews, preview)
 		return nil
 	})
 	
@@ -243,7 +307,29 @@ func previewDirectoryReplacements(dirPath string, rules []replace.Rule, recursiv
 		return err
 	}
 	
-	ui.PrintInfo("Total files to process: %d", count)
+	if replaceJsonOutput {
+		// JSON output
+		output := map[string]interface{}{
+			"operation": "replace",
+			"dryRun":    replaceDryRun,
+			"rules":     rules,
+			"files":     previews,
+			"summary": map[string]interface{}{
+				"totalFiles": len(previews),
+				"recursive":  recursive,
+				"exclude":    excludeGlob,
+			},
+		}
+		
+		jsonBytes, _ := json.MarshalIndent(output, "", "  ")
+		fmt.Println(string(jsonBytes))
+	} else {
+		ui.PrintInfo("Total files to process: %d", len(previews))
+		if showDiff {
+			ui.PrintInfo("Use --diff to see detailed changes for each file")
+		}
+	}
+	
 	return nil
 }
 
@@ -281,12 +367,14 @@ func init() {
 
 	replaceCmd.Flags().StringVarP(&rulesFile, "rules", "r", "", "YAML file containing replacement rules (required)")
 	replaceCmd.Flags().StringVarP(&targetPath, "path", "p", "", "Target file or directory (required)")
-	replaceCmd.Flags().BoolVar(&dryRun, "dry-run", false, "Preview changes without applying them")
+	replaceCmd.Flags().BoolVar(&replaceDryRun, "dry-run", false, "Preview changes without applying them")
 	replaceCmd.Flags().BoolVar(&backup, "backup", false, "Create backup files before modification")
 	replaceCmd.Flags().BoolVar(&recursive, "recursive", true, "Process subdirectories recursively")
 	replaceCmd.Flags().StringVar(&excludeGlob, "exclude", "", "Glob pattern for files to exclude")
 	replaceCmd.Flags().BoolVar(&concurrent, "concurrent", false, "Process files concurrently for better performance")
 	replaceCmd.Flags().IntVar(&maxWorkers, "max-workers", 0, "Maximum number of concurrent workers (default: number of CPUs)")
+	replaceCmd.Flags().BoolVar(&replaceJsonOutput, "json", false, "Output in JSON format")
+	replaceCmd.Flags().BoolVar(&showDiff, "diff", false, "Show diff-style preview in dry-run mode")
 
 	replaceCmd.MarkFlagRequired("rules")
 	replaceCmd.MarkFlagRequired("path")

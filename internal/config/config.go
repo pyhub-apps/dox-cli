@@ -8,10 +8,22 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
+// RetryConfig contains retry settings for API calls
+type RetryConfig struct {
+	MaxRetries   int  `yaml:"max_retries"`
+	InitialDelay int  `yaml:"initial_delay_ms"`
+	MaxDelay     int  `yaml:"max_delay_ms"`
+	Multiplier   float64 `yaml:"multiplier"`
+	Jitter       bool `yaml:"jitter"`
+}
+
 // Config represents the application configuration
 type Config struct {
 	// OpenAI configuration
 	OpenAI OpenAIConfig `yaml:"openai"`
+	
+	// Claude configuration
+	Claude ClaudeConfig `yaml:"claude"`
 	
 	// Default command options
 	Replace  ReplaceConfig  `yaml:"replace"`
@@ -25,10 +37,20 @@ type Config struct {
 
 // OpenAIConfig contains OpenAI API settings
 type OpenAIConfig struct {
-	APIKey      string  `yaml:"api_key"`
-	Model       string  `yaml:"model"`
-	MaxTokens   int     `yaml:"max_tokens"`
-	Temperature float64 `yaml:"temperature"`
+	APIKey      string       `yaml:"api_key"`
+	Model       string       `yaml:"model"`
+	MaxTokens   int          `yaml:"max_tokens"`
+	Temperature float64      `yaml:"temperature"`
+	Retry       RetryConfig  `yaml:"retry"`
+}
+
+// ClaudeConfig contains Claude API settings
+type ClaudeConfig struct {
+	APIKey      string       `yaml:"api_key"`
+	Model       string       `yaml:"model"`
+	MaxTokens   int          `yaml:"max_tokens"`
+	Temperature float64      `yaml:"temperature"`
+	Retry       RetryConfig  `yaml:"retry"`
 }
 
 // ReplaceConfig contains default settings for replace command
@@ -74,6 +96,25 @@ func DefaultConfig() *Config {
 			Model:       "gpt-3.5-turbo",
 			MaxTokens:   2000,
 			Temperature: 0.7,
+			Retry: RetryConfig{
+				MaxRetries:   3,
+				InitialDelay: 1000,  // 1 second
+				MaxDelay:     10000, // 10 seconds
+				Multiplier:   2.0,
+				Jitter:       true,
+			},
+		},
+		Claude: ClaudeConfig{
+			Model:       "claude-3-sonnet-20240229",
+			MaxTokens:   2000,
+			Temperature: 0.7,
+			Retry: RetryConfig{
+				MaxRetries:   3,
+				InitialDelay: 1000,  // 1 second
+				MaxDelay:     10000, // 10 seconds
+				Multiplier:   2.0,
+				Jitter:       true,
+			},
 		},
 		Replace: ReplaceConfig{
 			Backup:    false,

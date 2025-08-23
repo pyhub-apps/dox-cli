@@ -2,6 +2,8 @@ package replace
 
 import (
 	"fmt"
+	"os"
+	"path/filepath"
 	"runtime"
 	"sync"
 	"sync/atomic"
@@ -13,6 +15,7 @@ import (
 type ConcurrentOptions struct {
 	MaxWorkers   int  // Maximum number of concurrent workers
 	ShowProgress bool // Whether to show progress
+	Verbose      bool // Whether to show verbose output
 }
 
 // DefaultConcurrentOptions returns default concurrent options
@@ -52,10 +55,11 @@ func ReplaceInDirectoryConcurrent(dirPath string, rules []Rule, recursive bool, 
 		opts.MaxWorkers = 1
 	}
 	
-	// Create progress bar if needed
-	var progressBar *ui.ProgressBar
+	// Create progress tracker if needed
+	var progressTracker *ui.ProgressTracker
 	if opts.ShowProgress {
-		progressBar = ui.NewProgressBar(len(files), "Processing documents")
+		progressTracker = ui.NewProgressTracker(len(files), "Processing documents")
+		progressTracker.SetupGracefulShutdown() // Setup Ctrl+C handler
 	}
 	
 	// Use buffered channel as semaphore for limiting workers
@@ -68,6 +72,12 @@ func ReplaceInDirectoryConcurrent(dirPath string, rules []Rule, recursive bool, 
 
 	// Process files concurrently
 	for i, file := range files {
+		// Check if operation was cancelled
+		if progressTracker != nil && progressTracker.IsCancelled() {
+			ui.PrintWarning("Operation cancelled by user")
+			break
+		}
+		
 		wg.Add(1)
 		sem <- struct{}{} // Acquire semaphore
 		
@@ -75,8 +85,28 @@ func ReplaceInDirectoryConcurrent(dirPath string, rules []Rule, recursive bool, 
 			defer wg.Done()
 			defer func() { <-sem }() // Release semaphore
 			
+			// Check cancellation before processing
+			if progressTracker != nil && progressTracker.IsCancelled() {
+				results[idx] = ReplaceResult{
+					FilePath: path,
+					Success:  false,
+					Error:    fmt.Errorf("operation cancelled"),
+				}
+				return
+			}
+			
 			result := ReplaceResult{
 				FilePath: path,
+			}
+			
+			// Get file size for speed tracking
+			var fileSize int64
+			if info, err := os.Stat(path); err == nil {
+				fileSize = info.Size()
+			}
+			
+			if opts.Verbose {
+				ui.PrintDebug("Processing: %s (%s)", path, ui.FormatFileSize(fileSize))
 			}
 			
 			// Process the document
@@ -91,11 +121,11 @@ func ReplaceInDirectoryConcurrent(dirPath string, rules []Rule, recursive bool, 
 			
 			results[idx] = result
 			
-			// Update progress
-			if opts.ShowProgress && progressBar != nil {
-				progressBar.Increment()
+			// Update progress with file info and size
+			if opts.ShowProgress && progressTracker != nil {
+				progressTracker.UpdateProgress(filepath.Base(path), fileSize)
 				current := atomic.AddInt32(&processed, 1)
-				_ = current // Progress bar handles display
+				_ = current // Progress tracker handles display
 			}
 		}(i, file)
 	}
@@ -103,9 +133,15 @@ func ReplaceInDirectoryConcurrent(dirPath string, rules []Rule, recursive bool, 
 	// Wait for all workers to complete
 	wg.Wait()
 	
-	// Finish progress bar
-	if progressBar != nil {
-		progressBar.Finish()
+	// Finish progress tracker and show final stats
+	if progressTracker != nil {
+		progressTracker.Finish()
+		
+		// Show final statistics if verbose
+		if opts.Verbose {
+			stats := progressTracker.GetStats()
+			ui.PrintInfo("Final statistics: %s", stats.String())
+		}
 	}
 	
 	return results, nil
