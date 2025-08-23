@@ -7,6 +7,7 @@ import (
 	"path/filepath"
 	"strings"
 
+	pkgErrors "github.com/pyhub/pyhub-docs/internal/errors"
 	"github.com/pyhub/pyhub-docs/internal/i18n"
 	"github.com/pyhub/pyhub-docs/internal/template"
 	"github.com/spf13/cobra"
@@ -76,18 +77,17 @@ func init() {
 func runTemplate(cmd *cobra.Command, args []string) error {
 	// Check if template file exists
 	if _, err := os.Stat(templatePath); os.IsNotExist(err) {
-		return fmt.Errorf("%s", i18n.T(i18n.MsgErrorFileNotFound, map[string]interface{}{
-			"Type": "Template",
-			"Path": templatePath,
-		}))
+		return pkgErrors.LocalizedFileNotFoundError(templatePath)
 	}
 
 	// Check if output file exists and force flag is not set
 	if !templateForce {
 		if _, err := os.Stat(templateOut); err == nil {
-			return fmt.Errorf("%s", i18n.T(i18n.MsgErrorFileExists, map[string]interface{}{
-				"Path": templateOut,
-			}))
+			return pkgErrors.NewError(pkgErrors.ErrCodeFileAlreadyExists, fmt.Sprintf("Output file already exists: %s", templateOut)).
+				WithContext("path", templateOut).
+				WithSuggestion("Use --force to overwrite the existing file").
+				WithSuggestion("Or choose a different output filename").
+				Build()
 		}
 	}
 
