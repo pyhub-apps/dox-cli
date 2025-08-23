@@ -208,4 +208,63 @@ func TestFormatError(t *testing.T) {
 	if output != "simple error" {
 		t.Errorf("Regular error formatting incorrect: %s", output)
 	}
+	
+	// Test with nil error
+	nilOutput := FormatError(nil, true)
+	if nilOutput != "" {
+		t.Errorf("Nil error should return empty string, got: %s", nilOutput)
+	}
+}
+
+func TestUnsupportedLocale(t *testing.T) {
+	// Try to initialize with unsupported locale
+	if err := i18n.Init("xx"); err != nil {
+		// This is fine - just means the locale wasn't found
+		t.Logf("Unsupported locale handled correctly: %v", err)
+	}
+	
+	// Should fall back to English
+	err := LocalizedFileNotFoundError("/test.txt")
+	errStr := err.Error()
+	
+	// Should still contain basic error information even with fallback
+	if !strings.Contains(errStr, "/test.txt") {
+		t.Errorf("Error should contain path even with locale fallback: %s", errStr)
+	}
+	
+	// Reset to English
+	i18n.Init("en")
+}
+
+func TestLocalizedErrorWithMissingArgs(t *testing.T) {
+	// Test that missing arguments don't cause panics
+	tests := []struct {
+		name    string
+		errFunc func() error
+	}{
+		{
+			name: "FileNotFoundError_NoArgs",
+			errFunc: func() error {
+				// This should not panic even with no args
+				return NewLocalizedError(ErrCodeFileNotFound, MsgErrFileNotFound).Build()
+			},
+		},
+		{
+			name: "PermissionDeniedError_PartialArgs",
+			errFunc: func() error {
+				// This should not panic with only one arg
+				return NewLocalizedError(ErrCodePermissionDenied, MsgErrPermissionDenied, "read").Build()
+			},
+		},
+	}
+	
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			// Should not panic
+			err := tt.errFunc()
+			if err == nil {
+				t.Error("Expected error, got nil")
+			}
+		})
+	}
 }

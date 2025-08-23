@@ -105,14 +105,30 @@ func (b *ErrorBuilder) WithDetails(details string) *ErrorBuilder {
 	return b
 }
 
-// WithSuggestion adds a suggestion
+// WithSuggestion adds a suggestion (prevents duplicates)
 func (b *ErrorBuilder) WithSuggestion(suggestion string) *ErrorBuilder {
+	// Check for duplicates before adding
+	for _, existing := range b.err.Suggestions {
+		if existing == suggestion {
+			return b
+		}
+	}
 	b.err.Suggestions = append(b.err.Suggestions, suggestion)
 	return b
 }
 
-// WithContext adds context information
+// WithContext adds context information (skips nil/empty values)
 func (b *ErrorBuilder) WithContext(key string, value interface{}) *ErrorBuilder {
+	// Skip nil values
+	if value == nil {
+		return b
+	}
+	
+	// Skip empty string values
+	if str, ok := value.(string); ok && str == "" {
+		return b
+	}
+	
 	b.err.Context[key] = value
 	return b
 }
@@ -182,10 +198,12 @@ func MissingAPIKeyError(provider string) error {
 }
 
 // OutOfMemoryError creates an out of memory error with optimization suggestions
+// fileSize is reported in MB with one decimal place for accuracy
 func OutOfMemoryError(fileSize int64) error {
+	fileSizeMB := float64(fileSize) / (1024 * 1024)
 	return NewError(ErrCodeOutOfMemory, "Not enough memory to process document").
-		WithDetails(fmt.Sprintf("File size: %d MB", fileSize/1024/1024)).
-		WithContext("file_size_mb", fileSize/1024/1024).
+		WithDetails(fmt.Sprintf("File size: %.1f MB", fileSizeMB)).
+		WithContext("file_size_mb", fmt.Sprintf("%.1f", fileSizeMB)).
 		WithSuggestion("Use --streaming mode for large files: dox replace --streaming").
 		WithSuggestion("Close other applications to free up memory").
 		WithSuggestion("Process the file on a machine with more RAM").
@@ -197,8 +215,8 @@ func InvalidDocumentFormatError(path string, expected string, found string) erro
 	return NewError(ErrCodeInvalidFormat, fmt.Sprintf("Invalid document format for '%s'", path)).
 		WithDetails(fmt.Sprintf("Expected %s, but found %s", expected, found)).
 		WithContext("path", path).
-		WithContext("expected_format", expected).
-		WithContext("found_format", found).
+		WithContext("expected", expected).
+		WithContext("found", found).
 		WithSuggestion(fmt.Sprintf("Convert the file to %s format first", expected)).
 		WithSuggestion("Check if the file extension matches the actual format").
 		WithSuggestion("Ensure the file is not corrupted").

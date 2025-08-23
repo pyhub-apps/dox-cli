@@ -55,21 +55,31 @@ type LocalizedErrorBuilder struct {
 func NewLocalizedError(code ErrorCode, messageKey string, args ...interface{}) *LocalizedErrorBuilder {
 	data := make(map[string]interface{})
 	if len(args) > 0 {
-		// Map arguments to template data based on message key
+		// Map arguments to template data based on message key with safe bounds checking
 		switch messageKey {
 		case MsgErrFileNotFound:
-			data["Path"] = args[0]
+			if len(args) >= 1 {
+				data["Path"] = args[0]
+			}
 		case MsgErrPermissionDenied:
-			if len(args) >= 2 {
+			if len(args) >= 1 {
 				data["Operation"] = args[0]
+			}
+			if len(args) >= 2 {
 				data["Path"] = args[1]
 			}
 		case MsgErrInvalidYAML, MsgErrConfigNotFound:
-			data["File"] = args[0]
+			if len(args) >= 1 {
+				data["File"] = args[0]
+			}
 		case MsgErrMissingAPIKey:
-			data["Provider"] = args[0]
+			if len(args) >= 1 {
+				data["Provider"] = args[0]
+			}
 		case MsgErrInvalidFormat:
-			data["Path"] = args[0]
+			if len(args) >= 1 {
+				data["Path"] = args[0]
+			}
 		}
 	}
 	
@@ -84,24 +94,32 @@ func NewLocalizedError(code ErrorCode, messageKey string, args ...interface{}) *
 // WithLocalizedDetails adds localized details
 func (b *LocalizedErrorBuilder) WithLocalizedDetails(detailKey string, args ...interface{}) *LocalizedErrorBuilder {
 	data := make(map[string]interface{})
-	if len(args) > 0 {
-		// Map arguments based on detail key
-		switch detailKey {
-		case MsgDetailErrorAtLine:
-			if len(args) >= 2 {
-				data["Line"] = args[0]
-				data["Error"] = args[1]
-			}
-		case MsgDetailExpectedFormat:
-			if len(args) >= 2 {
-				data["Expected"] = args[0]
-				data["Found"] = args[1]
-			}
-		case MsgDetailFileSize:
+	// Map arguments based on detail key with safe bounds checking
+	switch detailKey {
+	case MsgDetailErrorAtLine:
+		if len(args) >= 1 {
+			data["Line"] = args[0]
+		}
+		if len(args) >= 2 {
+			data["Error"] = args[1]
+		}
+	case MsgDetailExpectedFormat:
+		if len(args) >= 1 {
+			data["Expected"] = args[0]
+		}
+		if len(args) >= 2 {
+			data["Found"] = args[1]
+		}
+	case MsgDetailFileSize:
+		if len(args) >= 1 {
 			data["Size"] = args[0]
-		case MsgDetailSearchedIn:
+		}
+	case MsgDetailSearchedIn:
+		if len(args) >= 1 {
 			data["Path"] = args[0]
-		case MsgDetailOperation:
+		}
+	case MsgDetailOperation:
+		if len(args) >= 1 {
 			data["Operation"] = args[0]
 		}
 	}
@@ -114,14 +132,18 @@ func (b *LocalizedErrorBuilder) WithLocalizedDetails(detailKey string, args ...i
 // WithLocalizedSuggestion adds a localized suggestion
 func (b *LocalizedErrorBuilder) WithLocalizedSuggestion(suggestionKey string, args ...interface{}) *LocalizedErrorBuilder {
 	data := make(map[string]interface{})
-	if len(args) > 0 {
-		// Map arguments based on suggestion key
-		switch suggestionKey {
-		case MsgSugCheckPermissions:
+	// Map arguments based on suggestion key with safe bounds checking
+	switch suggestionKey {
+	case MsgSugCheckPermissions:
+		if len(args) >= 1 {
 			data["Path"] = args[0]
-		case MsgSugSetAPIKey:
+		}
+	case MsgSugSetAPIKey:
+		if len(args) >= 1 {
 			data["Provider"] = args[0]
-		case MsgSugCheckFormat:
+		}
+	case MsgSugCheckFormat:
+		if len(args) >= 1 {
 			data["Format"] = args[0]
 		}
 	}
@@ -195,6 +217,11 @@ func LocalizedInvalidFormatError(path string, expected string, found string) err
 
 // FormatError formats an error for display with proper localization
 func FormatError(err error, verbose bool) string {
+	// Handle nil error
+	if err == nil {
+		return ""
+	}
+	
 	// Check if it's an enhanced error
 	var enhanced *EnhancedError
 	if As(err, &enhanced) {

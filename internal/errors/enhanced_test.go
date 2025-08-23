@@ -70,7 +70,7 @@ func TestEnhancedError(t *testing.T) {
 			expectedCode: ErrCodeOutOfMemory,
 			expectedInError: []string{
 				"Not enough memory",
-				"100 MB",
+				"100.0 MB", // Now using float formatting
 				"--streaming",
 				"Close other applications",
 			},
@@ -153,6 +153,7 @@ func TestEnhancedErrorUnwrap(t *testing.T) {
 }
 
 func TestGetSuggestions(t *testing.T) {
+	// Test with suggestions
 	err := FileNotFoundError("/missing/file.txt")
 	
 	var enhanced *EnhancedError
@@ -163,5 +164,64 @@ func TestGetSuggestions(t *testing.T) {
 	suggestions := enhanced.GetSuggestions()
 	if len(suggestions) < 2 {
 		t.Errorf("Expected at least 2 suggestions, got %d", len(suggestions))
+	}
+	
+	// Test empty suggestions
+	emptyErr := &EnhancedError{
+		Code:        ErrCodeFileNotFound,
+		Message:     "test error",
+		Suggestions: nil,
+	}
+	
+	emptySuggestions := emptyErr.GetSuggestions()
+	if len(emptySuggestions) != 0 {
+		t.Errorf("Expected empty suggestions, got %d", len(emptySuggestions))
+	}
+}
+
+func TestDuplicateSuggestions(t *testing.T) {
+	err := NewError(ErrCodeFileNotFound, "Test").
+		WithSuggestion("Try this").
+		WithSuggestion("Try this"). // Duplicate
+		WithSuggestion("Try that").
+		Build()
+	
+	var enhanced *EnhancedError
+	if !As(err, &enhanced) {
+		t.Fatal("Expected EnhancedError")
+	}
+	
+	if len(enhanced.Suggestions) != 2 {
+		t.Errorf("Expected 2 unique suggestions, got %d", len(enhanced.Suggestions))
+	}
+}
+
+func TestNilContextValues(t *testing.T) {
+	err := NewError(ErrCodeFileNotFound, "Test").
+		WithContext("key1", "value1").
+		WithContext("key2", nil). // Should be skipped
+		WithContext("key3", "").   // Should be skipped
+		WithContext("key4", 0).    // Should be included
+		Build()
+	
+	var enhanced *EnhancedError
+	if !As(err, &enhanced) {
+		t.Fatal("Expected EnhancedError")
+	}
+	
+	if len(enhanced.Context) != 2 {
+		t.Errorf("Expected 2 context values, got %d", len(enhanced.Context))
+	}
+	
+	if _, exists := enhanced.Context["key2"]; exists {
+		t.Error("Nil value should not be in context")
+	}
+	
+	if _, exists := enhanced.Context["key3"]; exists {
+		t.Error("Empty string should not be in context")
+	}
+	
+	if _, exists := enhanced.Context["key4"]; !exists {
+		t.Error("Zero value should be in context")
 	}
 }
