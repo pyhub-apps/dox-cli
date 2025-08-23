@@ -139,7 +139,13 @@ Examples:
 				results, err = replace.ReplaceInDirectoryWithResultsAndExclude(targetPath, rules, recursive, excludeGlob)
 			}
 			if err != nil {
-				return fmt.Errorf("failed to process directory: %w", err)
+				return pkgErrors.NewError(pkgErrors.ErrCodeFileNotFound, "Failed to process directory").
+					WithDetails(fmt.Sprintf("Error processing %s", targetPath)).
+					WithContext("path", targetPath).
+					WithSuggestion("Check if the directory exists and is accessible").
+					WithSuggestion("Ensure you have read permissions for the directory").
+					WithWrapped(err).
+					Build()
 			}
 
 			// Print results

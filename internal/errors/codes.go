@@ -281,9 +281,17 @@ func IsCodedError(err error) bool {
 
 // GetErrorCode extracts the error code from an error
 func GetErrorCode(err error) ErrorCode {
+	// Check for CodedError
 	var ce *CodedError
 	if errors.As(err, &ce) {
 		return ce.Code
 	}
+	
+	// Check for EnhancedError
+	var ee *EnhancedError
+	if errors.As(err, &ee) {
+		return ee.GetCode()
+	}
+	
 	return ""
 }
