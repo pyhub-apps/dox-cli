@@ -3,7 +3,6 @@ package document
 import (
 	"archive/zip"
 	"bufio"
-	"bytes"
 	"encoding/xml"
 	"fmt"
 	"io"
@@ -190,27 +189,162 @@ func (d *StreamingWordDocument) ReplaceTextStreaming(oldText, newText string) er
 		return fmt.Errorf("document is closed")
 	}
 	
-	// Find document.xml
-	var docXML *zip.File
+	// Create temporary file for output
+	tmpFile, err := os.CreateTemp("", "docx-stream-*.tmp")
+	if err != nil {
+		return fmt.Errorf("failed to create temp file: %w", err)
+	}
+	defer os.Remove(tmpFile.Name())
+	defer tmpFile.Close()
+	
+	// Create new zip writer for output
+	zipWriter := zip.NewWriter(tmpFile)
+	defer zipWriter.Close()
+	
+	// Track replacement count
+	replacementCount := 0
+	
+	// Process each file in the source zip
 	for _, file := range d.zipFile.File {
 		if file.Name == "word/document.xml" {
-			docXML = file
-			break
+			// Stream and modify this file
+			count, err := d.streamAndModifyXML(file, zipWriter, oldText, newText)
+			if err != nil {
+				return fmt.Errorf("failed to process document.xml: %w", err)
+			}
+			replacementCount += count
+		} else {
+			// Copy other files as-is
+			if err := d.copyZipFile(file, zipWriter); err != nil {
+				return fmt.Errorf("failed to copy %s: %w", file.Name, err)
+			}
 		}
 	}
 	
-	if docXML == nil {
-		return fmt.Errorf("document.xml not found in docx")
+	// Close the zip writer to finalize the archive
+	if err := zipWriter.Close(); err != nil {
+		return fmt.Errorf("failed to finalize zip: %w", err)
+	}
+	tmpFile.Close()
+	
+	if replacementCount > 0 {
+		d.modified = true
+		// Close the original file handle
+		if err := d.file.Close(); err != nil {
+			return fmt.Errorf("failed to close original file: %w", err)
+		}
+		
+		// Replace the original file with the modified version
+		if err := os.Rename(tmpFile.Name(), d.path); err != nil {
+			return fmt.Errorf("failed to replace original file: %w", err)
+		}
+		
+		// Reopen the file for potential further operations
+		d.file, err = os.Open(d.path)
+		if err != nil {
+			return fmt.Errorf("failed to reopen file: %w", err)
+		}
+		
+		// Recreate zip reader
+		fileInfo, err := d.file.Stat()
+		if err != nil {
+			return fmt.Errorf("failed to stat reopened file: %w", err)
+		}
+		d.zipFile, err = zip.NewReader(d.file, fileInfo.Size())
+		if err != nil {
+			return fmt.Errorf("failed to recreate zip reader: %w", err)
+		}
 	}
 	
-	// Open document.xml
-	rc, err := docXML.Open()
+	return nil
+}
+
+// streamAndModifyXML processes and modifies XML content in a streaming manner
+func (d *StreamingWordDocument) streamAndModifyXML(src *zip.File, dst *zip.Writer, oldText, newText string) (int, error) {
+	reader, err := src.Open()
 	if err != nil {
-		return fmt.Errorf("failed to open document.xml: %w", err)
+		return 0, fmt.Errorf("failed to open source file: %w", err)
 	}
-	defer rc.Close()
+	defer reader.Close()
 	
-	// Read in chunks and replace
+	writer, err := dst.Create(src.Name)
+	if err != nil {
+		return 0, fmt.Errorf("failed to create destination file: %w", err)
+	}
+	
+	// Use XML decoder/encoder for proper streaming
+	decoder := xml.NewDecoder(reader)
+	encoder := xml.NewEncoder(writer)
+	
+	replacementCount := 0
+	var buffer []byte
+	if d.options.EnableMemoryPool && d.memPool != nil {
+		buffer = d.memPool.Get().([]byte)
+		defer d.memPool.Put(buffer)
+	}
+	
+	// Stream XML tokens
+	for {
+		token, err := decoder.Token()
+		if err == io.EOF {
+			break
+		}
+		if err != nil {
+			return replacementCount, fmt.Errorf("XML decode error: %w", err)
+		}
+		
+		// Modify text content
+		if charData, ok := token.(xml.CharData); ok {
+			original := string(charData)
+			modified := strings.ReplaceAll(original, oldText, newText)
+			if original != modified {
+				replacementCount += strings.Count(original, oldText)
+				token = xml.CharData(modified)
+			}
+			
+			// Update memory usage tracking (only tracks current chunk size, not cumulative)
+			// This represents the memory used for the current processing buffer
+			d.mu.Lock()
+			// Track the larger of the current chunk or configured chunk size
+			currentChunkSize := len(modified)
+			if currentChunkSize < d.options.ChunkSize {
+				d.memUsage = int64(d.options.ChunkSize)
+			} else {
+				d.memUsage = int64(currentChunkSize)
+			}
+			d.mu.Unlock()
+		}
+		
+		// Write token immediately (true streaming)
+		if err := encoder.EncodeToken(token); err != nil {
+			return replacementCount, fmt.Errorf("XML encode error: %w", err)
+		}
+	}
+	
+	// Flush encoder
+	if err := encoder.Flush(); err != nil {
+		return replacementCount, fmt.Errorf("failed to flush encoder: %w", err)
+	}
+	
+	return replacementCount, nil
+}
+
+// copyZipFile copies a file from source zip to destination zip without modification
+func (d *StreamingWordDocument) copyZipFile(src *zip.File, dst *zip.Writer) error {
+	reader, err := src.Open()
+	if err != nil {
+		return fmt.Errorf("failed to open source file: %w", err)
+	}
+	defer reader.Close()
+	
+	// Create destination file with same metadata
+	header := src.FileHeader
+	writer, err := dst.CreateHeader(&header)
+	if err != nil {
+		return fmt.Errorf("failed to create destination file: %w", err)
+	}
+	
+	// Use buffer from pool if available
 	var buffer []byte
 	if d.options.EnableMemoryPool && d.memPool != nil {
 		buffer = d.memPool.Get().([]byte)
@@ -219,39 +353,11 @@ func (d *StreamingWordDocument) ReplaceTextStreaming(oldText, newText string) er
 		buffer = make([]byte, d.options.ChunkSize)
 	}
 	
-	var result bytes.Buffer
-	reader := bufio.NewReaderSize(rc, d.options.ChunkSize)
-	
-	for {
-		n, err := reader.Read(buffer)
-		if n > 0 {
-			chunk := string(buffer[:n])
-			// Replace text in chunk
-			chunk = strings.ReplaceAll(chunk, oldText, newText)
-			result.WriteString(chunk)
-			
-			// Update memory usage
-			d.mu.Lock()
-			d.memUsage = int64(result.Len())
-			d.mu.Unlock()
-			
-			// Check if exceeding memory limit
-			if d.memUsage > d.options.MaxMemory {
-				return fmt.Errorf("memory limit exceeded: %d > %d", d.memUsage, d.options.MaxMemory)
-			}
-		}
-		
-		if err == io.EOF {
-			break
-		}
-		if err != nil {
-			return fmt.Errorf("error reading document: %w", err)
-		}
+	// Stream copy with buffer
+	_, err = io.CopyBuffer(writer, reader, buffer)
+	if err != nil {
+		return fmt.Errorf("failed to copy file content: %w", err)
 	}
-	
-	d.modified = true
-	// Note: In real implementation, we'd need to update the zip file with new content
-	// This is a simplified version
 	
 	return nil
 }

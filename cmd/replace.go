@@ -161,7 +161,14 @@ Examples:
 			}
 			
 			// Check if we should use large file processing
-			fileInfo, _ := os.Stat(targetPath)
+			fileInfo, err := os.Stat(targetPath)
+			if err != nil {
+				// If file doesn't exist or we can't stat it, proceed without streaming
+				if !os.IsNotExist(err) {
+					ui.PrintError("Failed to check file %s: %v", targetPath, err)
+				}
+				fileInfo = nil
+			}
 			if enableStreaming && fileInfo != nil && fileInfo.Size() > 10*1024*1024 { // > 10MB
 				// Use large file processing
 				opts := replace.DefaultLargeFileOptions()
@@ -400,7 +407,7 @@ func init() {
 	replaceCmd.Flags().IntVar(&maxWorkers, "max-workers", 0, "Maximum number of concurrent workers (default: number of CPUs)")
 	replaceCmd.Flags().BoolVar(&replaceJsonOutput, "json", false, "Output in JSON format")
 	replaceCmd.Flags().BoolVar(&showDiff, "diff", false, "Show diff-style preview in dry-run mode")
-	replaceCmd.Flags().BoolVar(&enableStreaming, "streaming", true, "Enable streaming mode for large files")
+	replaceCmd.Flags().BoolVar(&enableStreaming, "streaming", false, "Enable streaming mode for large files (experimental)")
 	replaceCmd.Flags().BoolVar(&memoryMonitor, "memory-monitor", true, "Enable memory usage monitoring")
 
 	replaceCmd.MarkFlagRequired("rules")

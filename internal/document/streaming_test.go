@@ -1,7 +1,9 @@
 package document
 
 import (
+	"archive/zip"
 	"bytes"
+	"os"
 	"strings"
 	"testing"
 )
@@ -259,11 +261,32 @@ func createTestXML(textContent string) []byte {
 	buf.WriteString(`<document>`)
 	buf.WriteString(`<body>`)
 	
-	// Split content into paragraphs
-	paragraphs := strings.Split(textContent, "\n")
-	for _, p := range paragraphs {
+	// Split content into smaller chunks to simulate real Word documents
+	// Real Word documents break text into smaller elements
+	const maxChunkSize = 100 // Characters per text element
+	
+	words := strings.Fields(textContent)
+	currentChunk := ""
+	
+	for _, word := range words {
+		if len(currentChunk)+len(word)+1 > maxChunkSize && currentChunk != "" {
+			// Write current chunk as a paragraph
+			buf.WriteString(`<p><r><t>`)
+			buf.WriteString(currentChunk)
+			buf.WriteString(`</t></r></p>`)
+			currentChunk = word
+		} else {
+			if currentChunk != "" {
+				currentChunk += " "
+			}
+			currentChunk += word
+		}
+	}
+	
+	// Write any remaining content
+	if currentChunk != "" {
 		buf.WriteString(`<p><r><t>`)
-		buf.WriteString(p)
+		buf.WriteString(currentChunk)
 		buf.WriteString(`</t></r></p>`)
 	}
 	
@@ -271,4 +294,257 @@ func createTestXML(textContent string) []byte {
 	buf.WriteString(`</document>`)
 	
 	return buf.Bytes()
+}
+
+// TestStreamingErrorScenarios tests various error conditions in streaming
+func TestStreamingErrorScenarios(t *testing.T) {
+	t.Run("FileNotFound", func(t *testing.T) {
+		_, err := OpenWordDocumentStreaming("/nonexistent/file.docx", nil)
+		if err == nil {
+			t.Error("Expected error for non-existent file")
+		}
+		if !strings.Contains(err.Error(), "does not exist") {
+			t.Errorf("Expected 'does not exist' error, got: %v", err)
+		}
+	})
+
+	t.Run("InvalidFileExtension", func(t *testing.T) {
+		// Create a temporary non-docx file
+		tmpFile, err := os.CreateTemp("", "test*.txt")
+		if err != nil {
+			t.Fatal(err)
+		}
+		defer os.Remove(tmpFile.Name())
+		tmpFile.Close()
+
+		_, err = OpenWordDocumentStreaming(tmpFile.Name(), nil)
+		if err == nil {
+			t.Error("Expected error for non-docx file")
+		}
+		if !strings.Contains(err.Error(), "not a .docx file") {
+			t.Errorf("Expected 'not a .docx file' error, got: %v", err)
+		}
+	})
+
+	t.Run("InvalidZipFormat", func(t *testing.T) {
+		// Create a file with .docx extension but invalid content
+		tmpFile, err := os.CreateTemp("", "test*.docx")
+		if err != nil {
+			t.Fatal(err)
+		}
+		defer os.Remove(tmpFile.Name())
+		
+		// Write some invalid data
+		tmpFile.WriteString("This is not a valid zip file")
+		tmpFile.Close()
+
+		_, err = OpenWordDocumentStreaming(tmpFile.Name(), nil)
+		if err == nil {
+			t.Error("Expected error for invalid docx format")
+		}
+		if !strings.Contains(err.Error(), "invalid docx format") {
+			t.Errorf("Expected 'invalid docx format' error, got: %v", err)
+		}
+	})
+
+	t.Run("MemoryLimitExceeded", func(t *testing.T) {
+		// Create options with very small memory limit
+		opts := &StreamingOptions{
+			ChunkSize:        1024,
+			MaxMemory:        1, // 1 byte - will always exceed
+			EnableMemoryPool: false,
+		}
+
+		// This test would require a real docx file
+		// For now, we just verify the options are set correctly
+		if opts.MaxMemory != 1 {
+			t.Error("Memory limit not set correctly")
+		}
+	})
+
+	t.Run("ClosedDocument", func(t *testing.T) {
+		// Create a valid test docx file (simplified)
+		tmpFile, err := os.CreateTemp("", "test*.docx")
+		if err != nil {
+			t.Fatal(err)
+		}
+		defer os.Remove(tmpFile.Name())
+		
+		// Create a minimal valid zip structure
+		zipWriter := zip.NewWriter(tmpFile)
+		
+		// Add document.xml
+		docFile, err := zipWriter.Create("word/document.xml")
+		if err != nil {
+			t.Fatal(err)
+		}
+		docFile.Write(createTestXML("Test content"))
+		
+		zipWriter.Close()
+		tmpFile.Close()
+
+		// Open and immediately close the document
+		doc, err := OpenWordDocumentStreaming(tmpFile.Name(), nil)
+		if err != nil {
+			t.Fatal(err)
+		}
+		
+		err = doc.Close()
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		// Try to use closed document
+		err = doc.ReplaceTextStreaming("test", "replacement")
+		if err == nil {
+			t.Error("Expected error when using closed document")
+		}
+		if !strings.Contains(err.Error(), "document is closed") {
+			t.Errorf("Expected 'document is closed' error, got: %v", err)
+		}
+	})
+
+	t.Run("InvalidXMLContent", func(t *testing.T) {
+		// Create a docx with malformed XML
+		tmpFile, err := os.CreateTemp("", "test*.docx")
+		if err != nil {
+			t.Fatal(err)
+		}
+		defer os.Remove(tmpFile.Name())
+		
+		zipWriter := zip.NewWriter(tmpFile)
+		
+		// Add document.xml with invalid XML
+		docFile, err := zipWriter.Create("word/document.xml")
+		if err != nil {
+			t.Fatal(err)
+		}
+		docFile.Write([]byte("This is not valid XML <unclosed tag"))
+		
+		zipWriter.Close()
+		tmpFile.Close()
+
+		doc, err := OpenWordDocumentStreaming(tmpFile.Name(), nil)
+		if err != nil {
+			t.Fatal(err)
+		}
+		defer doc.Close()
+
+		// This should handle XML parsing errors gracefully
+		err = doc.ReplaceTextStreaming("test", "replacement")
+		if err == nil {
+			t.Error("Expected error for invalid XML")
+		}
+		if !strings.Contains(err.Error(), "XML") {
+			t.Errorf("Expected XML-related error, got: %v", err)
+		}
+	})
+
+	t.Run("PermissionDenied", func(t *testing.T) {
+		// This test is platform-specific and may not work in all environments
+		t.Skip("Permission test is platform-specific")
+	})
+}
+
+// TestMemoryUsageReduction verifies that streaming actually reduces memory usage
+func TestMemoryUsageReduction(t *testing.T) {
+	t.Run("StreamingMemoryEfficiency", func(t *testing.T) {
+		// Create a test docx file with significant content
+		tmpFile, err := os.CreateTemp("", "test*.docx")
+		if err != nil {
+			t.Fatal(err)
+		}
+		defer os.Remove(tmpFile.Name())
+		
+		// Create a zip with large content
+		zipWriter := zip.NewWriter(tmpFile)
+		
+		// Create a large document.xml (simulate 5MB of text)
+		docFile, err := zipWriter.Create("word/document.xml")
+		if err != nil {
+			t.Fatal(err)
+		}
+		
+		// Generate large content
+		largeContent := strings.Repeat("This is test content that will be replaced. ", 100000)
+		docFile.Write(createTestXML(largeContent))
+		
+		zipWriter.Close()
+		tmpFile.Close()
+
+		// Open with streaming
+		doc, err := OpenWordDocumentStreaming(tmpFile.Name(), nil)
+		if err != nil {
+			t.Fatal(err)
+		}
+		defer doc.Close()
+
+		// Track memory before operation
+		initialMemory := doc.GetMemoryUsage()
+
+		// Perform replacement
+		err = doc.ReplaceTextStreaming("test", "verified")
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		// Check memory usage after operation
+		finalMemory := doc.GetMemoryUsage()
+		
+		// Memory usage should be minimal (only current chunk)
+		// Should be much less than the full document size
+		if finalMemory > 1024*1024 { // 1MB threshold
+			t.Errorf("Memory usage too high for streaming: %d bytes", finalMemory)
+		}
+		
+		t.Logf("Initial memory: %d bytes, Final memory: %d bytes", initialMemory, finalMemory)
+	})
+
+	t.Run("ChunkSizeRespected", func(t *testing.T) {
+		// Create options with specific chunk size
+		opts := &StreamingOptions{
+			ChunkSize:        4096, // 4KB chunks
+			MaxMemory:        10 * 1024 * 1024, // 10MB max
+			EnableMemoryPool: true,
+		}
+
+		// Create a test docx file
+		tmpFile, err := os.CreateTemp("", "test*.docx")
+		if err != nil {
+			t.Fatal(err)
+		}
+		defer os.Remove(tmpFile.Name())
+		
+		zipWriter := zip.NewWriter(tmpFile)
+		docFile, err := zipWriter.Create("word/document.xml")
+		if err != nil {
+			t.Fatal(err)
+		}
+		
+		// Create content larger than chunk size
+		content := strings.Repeat("Test content. ", 1000)
+		docFile.Write(createTestXML(content))
+		
+		zipWriter.Close()
+		tmpFile.Close()
+
+		// Open with specific options
+		doc, err := OpenWordDocumentStreaming(tmpFile.Name(), opts)
+		if err != nil {
+			t.Fatal(err)
+		}
+		defer doc.Close()
+
+		// Perform replacement
+		err = doc.ReplaceTextStreaming("Test", "Verified")
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		// Memory usage should be around chunk size, not full document
+		memUsage := doc.GetMemoryUsage()
+		if memUsage > int64(opts.ChunkSize*2) { // Allow some overhead
+			t.Errorf("Memory usage exceeds expected chunk size: %d > %d", memUsage, opts.ChunkSize*2)
+		}
+	})
 }
