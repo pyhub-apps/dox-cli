@@ -81,6 +81,8 @@ func (m *MemoryMonitor) Start() {
 		m.mu.Unlock()
 		return
 	}
+	// Recreate stop channel to support restart after Stop
+	m.stopChan = make(chan struct{})
 	m.isRunning = true
 	m.mu.Unlock()
 	
@@ -95,9 +97,9 @@ func (m *MemoryMonitor) Stop() {
 		return
 	}
 	m.isRunning = false
-	m.mu.Unlock()
-	
+	// Close under lock to avoid races
 	close(m.stopChan)
+	m.mu.Unlock()
 }
 
 // monitorLoop is the main monitoring loop
@@ -139,8 +141,6 @@ func (m *MemoryMonitor) checkMemory() {
 		if m.alertHandler != nil {
 			m.alertHandler("CRITICAL", currentUsage, m.criticalThreshold)
 		}
-		// Force garbage collection when critical
-		runtime.GC()
 	} else if currentUsage > m.warningThreshold {
 		if m.alertHandler != nil {
 			m.alertHandler("WARNING", currentUsage, m.warningThreshold)

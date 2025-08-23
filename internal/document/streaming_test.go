@@ -395,7 +395,7 @@ func TestStreamingErrorScenarios(t *testing.T) {
 		}
 
 		// Try to use closed document
-		err = doc.ReplaceTextStreaming("test", "replacement")
+		_, err = doc.ReplaceTextStreaming("test", "replacement")
 		if err == nil {
 			t.Error("Expected error when using closed document")
 		}
@@ -431,7 +431,7 @@ func TestStreamingErrorScenarios(t *testing.T) {
 		defer doc.Close()
 
 		// This should handle XML parsing errors gracefully
-		err = doc.ReplaceTextStreaming("test", "replacement")
+		_, err = doc.ReplaceTextStreaming("test", "replacement")
 		if err == nil {
 			t.Error("Expected error for invalid XML")
 		}
@@ -483,10 +483,11 @@ func TestMemoryUsageReduction(t *testing.T) {
 		initialMemory := doc.GetMemoryUsage()
 
 		// Perform replacement
-		err = doc.ReplaceTextStreaming("test", "verified")
+		count, err := doc.ReplaceTextStreaming("test", "verified")
 		if err != nil {
 			t.Fatal(err)
 		}
+		t.Logf("Replaced %d occurrences", count)
 
 		// Check memory usage after operation
 		finalMemory := doc.GetMemoryUsage()
@@ -536,7 +537,7 @@ func TestMemoryUsageReduction(t *testing.T) {
 		defer doc.Close()
 
 		// Perform replacement
-		err = doc.ReplaceTextStreaming("Test", "Verified")
+		_, err = doc.ReplaceTextStreaming("Test", "Verified")
 		if err != nil {
 			t.Fatal(err)
 		}

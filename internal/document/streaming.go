@@ -7,7 +7,6 @@ import (
 	"fmt"
 	"io"
 	"os"
-	"runtime"
 	"strings"
 	"sync"
 )
@@ -184,15 +183,16 @@ func (d *StreamingWordDocument) ProcessTextChunked(processor func(chunk string) 
 }
 
 // ReplaceTextStreaming replaces text in the document using streaming
-func (d *StreamingWordDocument) ReplaceTextStreaming(oldText, newText string) error {
+// Returns the number of replacements made
+func (d *StreamingWordDocument) ReplaceTextStreaming(oldText, newText string) (int, error) {
 	if d.closed {
-		return fmt.Errorf("document is closed")
+		return 0, fmt.Errorf("document is closed")
 	}
 	
 	// Create temporary file for output
 	tmpFile, err := os.CreateTemp("", "docx-stream-*.tmp")
 	if err != nil {
-		return fmt.Errorf("failed to create temp file: %w", err)
+		return 0, fmt.Errorf("failed to create temp file: %w", err)
 	}
 	defer os.Remove(tmpFile.Name())
 	defer tmpFile.Close()
@@ -210,20 +210,20 @@ func (d *StreamingWordDocument) ReplaceTextStreaming(oldText, newText string) er
 			// Stream and modify this file
 			count, err := d.streamAndModifyXML(file, zipWriter, oldText, newText)
 			if err != nil {
-				return fmt.Errorf("failed to process document.xml: %w", err)
+				return 0, fmt.Errorf("failed to process document.xml: %w", err)
 			}
 			replacementCount += count
 		} else {
 			// Copy other files as-is
 			if err := d.copyZipFile(file, zipWriter); err != nil {
-				return fmt.Errorf("failed to copy %s: %w", file.Name, err)
+				return 0, fmt.Errorf("failed to copy %s: %w", file.Name, err)
 			}
 		}
 	}
 	
 	// Close the zip writer to finalize the archive
 	if err := zipWriter.Close(); err != nil {
-		return fmt.Errorf("failed to finalize zip: %w", err)
+		return 0, fmt.Errorf("failed to finalize zip: %w", err)
 	}
 	tmpFile.Close()
 	
@@ -231,32 +231,32 @@ func (d *StreamingWordDocument) ReplaceTextStreaming(oldText, newText string) er
 		d.modified = true
 		// Close the original file handle
 		if err := d.file.Close(); err != nil {
-			return fmt.Errorf("failed to close original file: %w", err)
+			return 0, fmt.Errorf("failed to close original file: %w", err)
 		}
 		
 		// Replace the original file with the modified version
 		if err := os.Rename(tmpFile.Name(), d.path); err != nil {
-			return fmt.Errorf("failed to replace original file: %w", err)
+			return 0, fmt.Errorf("failed to replace original file: %w", err)
 		}
 		
 		// Reopen the file for potential further operations
 		d.file, err = os.Open(d.path)
 		if err != nil {
-			return fmt.Errorf("failed to reopen file: %w", err)
+			return 0, fmt.Errorf("failed to reopen file: %w", err)
 		}
 		
 		// Recreate zip reader
 		fileInfo, err := d.file.Stat()
 		if err != nil {
-			return fmt.Errorf("failed to stat reopened file: %w", err)
+			return 0, fmt.Errorf("failed to stat reopened file: %w", err)
 		}
 		d.zipFile, err = zip.NewReader(d.file, fileInfo.Size())
 		if err != nil {
-			return fmt.Errorf("failed to recreate zip reader: %w", err)
+			return 0, fmt.Errorf("failed to recreate zip reader: %w", err)
 		}
 	}
 	
-	return nil
+	return replacementCount, nil
 }
 
 // streamAndModifyXML processes and modifies XML content in a streaming manner
@@ -382,9 +382,6 @@ func (d *StreamingWordDocument) Close() error {
 			return fmt.Errorf("failed to close file: %w", err)
 		}
 	}
-	
-	// Force garbage collection to free memory
-	runtime.GC()
 	
 	return nil
 }

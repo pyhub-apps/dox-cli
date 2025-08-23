@@ -133,14 +133,13 @@ func processWordDocumentStreaming(filePath string, rules []Rule, fileSize int64)
 	
 	// Apply each rule using streaming
 	for _, rule := range rules {
-		err := doc.ReplaceTextStreaming(rule.Old, rule.New)
+		count, err := doc.ReplaceTextStreaming(rule.Old, rule.New)
 		if err != nil {
 			result.Success = false
 			result.Error = err
 			return result, err
 		}
-		// Note: In real implementation, we'd track replacement count
-		result.Replacements++
+		result.Replacements += count
 	}
 	
 	return result, nil
@@ -206,14 +205,13 @@ func processPowerPointDocumentStreaming(filePath string, rules []Rule, fileSize 
 	
 	// Apply each rule using streaming
 	for _, rule := range rules {
-		err := doc.ReplaceTextInSlidesStreaming(rule.Old, rule.New)
+		count, err := doc.ReplaceTextInSlidesStreaming(rule.Old, rule.New)
 		if err != nil {
 			result.Success = false
 			result.Error = err
 			return result, err
 		}
-		// Note: In real implementation, we'd track replacement count
-		result.Replacements++
+		result.Replacements += count
 	}
 	
 	return result, nil

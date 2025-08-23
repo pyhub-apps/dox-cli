@@ -174,15 +174,16 @@ func (d *StreamingPowerPointDocument) processSlideChunked(slideFile *zip.File, s
 }
 
 // ReplaceTextInSlidesStreaming replaces text in all slides using streaming
-func (d *StreamingPowerPointDocument) ReplaceTextInSlidesStreaming(oldText, newText string) error {
+// Returns the number of replacements made
+func (d *StreamingPowerPointDocument) ReplaceTextInSlidesStreaming(oldText, newText string) (int, error) {
 	if d.closed {
-		return fmt.Errorf("document is closed")
+		return 0, fmt.Errorf("document is closed")
 	}
 	
 	// Create temporary file for output
 	tmpFile, err := os.CreateTemp("", "pptx-stream-*.tmp")
 	if err != nil {
-		return fmt.Errorf("failed to create temp file: %w", err)
+		return 0, fmt.Errorf("failed to create temp file: %w", err)
 	}
 	defer os.Remove(tmpFile.Name())
 	defer tmpFile.Close()
@@ -202,20 +203,20 @@ func (d *StreamingPowerPointDocument) ReplaceTextInSlidesStreaming(oldText, newT
 			// Stream and modify slide files
 			count, err := d.streamAndModifySlide(file, zipWriter, oldText, newText)
 			if err != nil {
-				return fmt.Errorf("failed to process %s: %w", file.Name, err)
+				return 0, fmt.Errorf("failed to process %s: %w", file.Name, err)
 			}
 			totalReplacements += count
 		} else {
 			// Copy other files as-is
 			if err := d.copyZipFile(file, zipWriter); err != nil {
-				return fmt.Errorf("failed to copy %s: %w", file.Name, err)
+				return 0, fmt.Errorf("failed to copy %s: %w", file.Name, err)
 			}
 		}
 	}
 	
 	// Close the zip writer to finalize the archive
 	if err := zipWriter.Close(); err != nil {
-		return fmt.Errorf("failed to finalize zip: %w", err)
+		return 0, fmt.Errorf("failed to finalize zip: %w", err)
 	}
 	tmpFile.Close()
 	
@@ -223,32 +224,32 @@ func (d *StreamingPowerPointDocument) ReplaceTextInSlidesStreaming(oldText, newT
 		d.modified = true
 		// Close the original file handle
 		if err := d.file.Close(); err != nil {
-			return fmt.Errorf("failed to close original file: %w", err)
+			return 0, fmt.Errorf("failed to close original file: %w", err)
 		}
 		
 		// Replace the original file with the modified version
 		if err := os.Rename(tmpFile.Name(), d.path); err != nil {
-			return fmt.Errorf("failed to replace original file: %w", err)
+			return 0, fmt.Errorf("failed to replace original file: %w", err)
 		}
 		
 		// Reopen the file for potential further operations
 		d.file, err = os.Open(d.path)
 		if err != nil {
-			return fmt.Errorf("failed to reopen file: %w", err)
+			return 0, fmt.Errorf("failed to reopen file: %w", err)
 		}
 		
 		// Recreate zip reader
 		fileInfo, err := d.file.Stat()
 		if err != nil {
-			return fmt.Errorf("failed to stat reopened file: %w", err)
+			return 0, fmt.Errorf("failed to stat reopened file: %w", err)
 		}
 		d.zipFile, err = zip.NewReader(d.file, fileInfo.Size())
 		if err != nil {
-			return fmt.Errorf("failed to recreate zip reader: %w", err)
+			return 0, fmt.Errorf("failed to recreate zip reader: %w", err)
 		}
 	}
 	
-	return nil
+	return totalReplacements, nil
 }
 
 // streamAndModifySlide processes and modifies slide XML content in a streaming manner
