@@ -185,12 +185,13 @@ func (d *StreamingPowerPointDocument) ReplaceTextInSlidesStreaming(oldText, newT
 	if err != nil {
 		return 0, fmt.Errorf("failed to create temp file: %w", err)
 	}
-	defer os.Remove(tmpFile.Name())
-	defer tmpFile.Close()
+	tmpPath := tmpFile.Name()
+	
+	// Ensure temp file is cleaned up in all cases
+	defer CleanupTempFile(tmpPath)
 	
 	// Create new zip writer for output
 	zipWriter := zip.NewWriter(tmpFile)
-	defer zipWriter.Close()
 	
 	// Track replacement count
 	totalReplacements := 0
@@ -203,12 +204,16 @@ func (d *StreamingPowerPointDocument) ReplaceTextInSlidesStreaming(oldText, newT
 			// Stream and modify slide files
 			count, err := d.streamAndModifySlide(file, zipWriter, oldText, newText)
 			if err != nil {
+				zipWriter.Close()
+				tmpFile.Close()
 				return 0, fmt.Errorf("failed to process %s: %w", file.Name, err)
 			}
 			totalReplacements += count
 		} else {
 			// Copy other files as-is
 			if err := d.copyZipFile(file, zipWriter); err != nil {
+				zipWriter.Close()
+				tmpFile.Close()
 				return 0, fmt.Errorf("failed to copy %s: %w", file.Name, err)
 			}
 		}
@@ -216,36 +221,47 @@ func (d *StreamingPowerPointDocument) ReplaceTextInSlidesStreaming(oldText, newT
 	
 	// Close the zip writer to finalize the archive
 	if err := zipWriter.Close(); err != nil {
+		tmpFile.Close()
 		return 0, fmt.Errorf("failed to finalize zip: %w", err)
 	}
-	tmpFile.Close()
+	
+	// Close the temp file
+	if err := tmpFile.Close(); err != nil {
+		return 0, fmt.Errorf("failed to close temp file: %w", err)
+	}
 	
 	if totalReplacements > 0 {
 		d.modified = true
 		// Close the original file handle
 		if err := d.file.Close(); err != nil {
-			return 0, fmt.Errorf("failed to close original file: %w", err)
+			return totalReplacements, fmt.Errorf("failed to close original file: %w", err)
 		}
 		
 		// Replace the original file with the modified version
-		if err := os.Rename(tmpFile.Name(), d.path); err != nil {
-			return 0, fmt.Errorf("failed to replace original file: %w", err)
+		if err := os.Rename(tmpPath, d.path); err != nil {
+			// Try to reopen the original file
+			d.file, _ = os.Open(d.path)
+			return totalReplacements, fmt.Errorf("failed to replace original file: %w", err)
 		}
 		
 		// Reopen the file for potential further operations
 		d.file, err = os.Open(d.path)
 		if err != nil {
-			return 0, fmt.Errorf("failed to reopen file: %w", err)
+			return totalReplacements, fmt.Errorf("failed to reopen file: %w", err)
 		}
 		
 		// Recreate zip reader
 		fileInfo, err := d.file.Stat()
 		if err != nil {
-			return 0, fmt.Errorf("failed to stat reopened file: %w", err)
+			d.file.Close()
+			d.file = nil
+			return totalReplacements, fmt.Errorf("failed to stat reopened file: %w", err)
 		}
 		d.zipFile, err = zip.NewReader(d.file, fileInfo.Size())
 		if err != nil {
-			return 0, fmt.Errorf("failed to recreate zip reader: %w", err)
+			d.file.Close()
+			d.file = nil
+			return totalReplacements, fmt.Errorf("failed to recreate zip reader: %w", err)
 		}
 	}
 	
@@ -324,19 +340,6 @@ func (d *StreamingPowerPointDocument) streamAndModifySlide(src *zip.File, dst *z
 
 // copyZipFile copies a file from source zip to destination zip without modification
 func (d *StreamingPowerPointDocument) copyZipFile(src *zip.File, dst *zip.Writer) error {
-	reader, err := src.Open()
-	if err != nil {
-		return fmt.Errorf("failed to open source file: %w", err)
-	}
-	defer reader.Close()
-	
-	// Create destination file with same metadata
-	header := src.FileHeader
-	writer, err := dst.CreateHeader(&header)
-	if err != nil {
-		return fmt.Errorf("failed to create destination file: %w", err)
-	}
-	
 	// Use buffer from pool if available
 	var buffer []byte
 	if d.options.EnableMemoryPool && d.memPool != nil {
@@ -346,12 +349,10 @@ func (d *StreamingPowerPointDocument) copyZipFile(src *zip.File, dst *zip.Writer
 		buffer = make([]byte, d.options.ChunkSize)
 	}
 	
-	// Stream copy with buffer
-	_, err = io.CopyBuffer(writer, reader, buffer)
+	err := CopyZipFileWithCompression(src, dst, buffer)
 	if err != nil {
-		return fmt.Errorf("failed to copy file content: %w", err)
+		return fmt.Errorf("failed to copy zip file: %w", err)
 	}
-	
 	return nil
 }
 

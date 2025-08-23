@@ -30,6 +30,32 @@ func DefaultStreamingOptions() *StreamingOptions {
 	}
 }
 
+// AdaptiveStreamingOptions returns streaming options adapted to file size
+func AdaptiveStreamingOptions(fileSize int64) *StreamingOptions {
+	opts := DefaultStreamingOptions()
+	
+	// Adapt chunk size based on file size
+	switch {
+	case fileSize < SmallFileThreshold:
+		opts.ChunkSize = SmallFileChunkSize
+		opts.MaxMemory = SmallFileMemoryLimit
+		
+	case fileSize < MediumFileThreshold:
+		opts.ChunkSize = MediumFileChunkSize
+		opts.MaxMemory = MediumFileMemoryLimit
+		
+	case fileSize < LargeFileThreshold:
+		opts.ChunkSize = LargeFileChunkSize
+		opts.MaxMemory = LargeFileMemoryLimit
+		
+	default: // >= 100MB
+		opts.ChunkSize = VeryLargeFileChunkSize
+		opts.MaxMemory = VeryLargeFileMemoryLimit
+	}
+	
+	return opts
+}
+
 // StreamingWordDocument handles large Word documents efficiently
 type StreamingWordDocument struct {
 	path     string
@@ -194,12 +220,13 @@ func (d *StreamingWordDocument) ReplaceTextStreaming(oldText, newText string) (i
 	if err != nil {
 		return 0, fmt.Errorf("failed to create temp file: %w", err)
 	}
-	defer os.Remove(tmpFile.Name())
-	defer tmpFile.Close()
+	tmpPath := tmpFile.Name()
+	
+	// Ensure temp file is cleaned up in all cases
+	defer CleanupTempFile(tmpPath)
 	
 	// Create new zip writer for output
 	zipWriter := zip.NewWriter(tmpFile)
-	defer zipWriter.Close()
 	
 	// Track replacement count
 	replacementCount := 0
@@ -210,12 +237,16 @@ func (d *StreamingWordDocument) ReplaceTextStreaming(oldText, newText string) (i
 			// Stream and modify this file
 			count, err := d.streamAndModifyXML(file, zipWriter, oldText, newText)
 			if err != nil {
+				zipWriter.Close()
+				tmpFile.Close()
 				return 0, fmt.Errorf("failed to process document.xml: %w", err)
 			}
 			replacementCount += count
 		} else {
 			// Copy other files as-is
 			if err := d.copyZipFile(file, zipWriter); err != nil {
+				zipWriter.Close()
+				tmpFile.Close()
 				return 0, fmt.Errorf("failed to copy %s: %w", file.Name, err)
 			}
 		}
@@ -223,36 +254,47 @@ func (d *StreamingWordDocument) ReplaceTextStreaming(oldText, newText string) (i
 	
 	// Close the zip writer to finalize the archive
 	if err := zipWriter.Close(); err != nil {
+		tmpFile.Close()
 		return 0, fmt.Errorf("failed to finalize zip: %w", err)
 	}
-	tmpFile.Close()
+	
+	// Close the temp file
+	if err := tmpFile.Close(); err != nil {
+		return 0, fmt.Errorf("failed to close temp file: %w", err)
+	}
 	
 	if replacementCount > 0 {
 		d.modified = true
 		// Close the original file handle
 		if err := d.file.Close(); err != nil {
-			return 0, fmt.Errorf("failed to close original file: %w", err)
+			return replacementCount, fmt.Errorf("failed to close original file: %w", err)
 		}
 		
 		// Replace the original file with the modified version
-		if err := os.Rename(tmpFile.Name(), d.path); err != nil {
-			return 0, fmt.Errorf("failed to replace original file: %w", err)
+		if err := os.Rename(tmpPath, d.path); err != nil {
+			// Try to reopen the original file
+			d.file, _ = os.Open(d.path)
+			return replacementCount, fmt.Errorf("failed to replace original file: %w", err)
 		}
 		
 		// Reopen the file for potential further operations
 		d.file, err = os.Open(d.path)
 		if err != nil {
-			return 0, fmt.Errorf("failed to reopen file: %w", err)
+			return replacementCount, fmt.Errorf("failed to reopen file: %w", err)
 		}
 		
 		// Recreate zip reader
 		fileInfo, err := d.file.Stat()
 		if err != nil {
-			return 0, fmt.Errorf("failed to stat reopened file: %w", err)
+			d.file.Close()
+			d.file = nil
+			return replacementCount, fmt.Errorf("failed to stat reopened file: %w", err)
 		}
 		d.zipFile, err = zip.NewReader(d.file, fileInfo.Size())
 		if err != nil {
-			return 0, fmt.Errorf("failed to recreate zip reader: %w", err)
+			d.file.Close()
+			d.file = nil
+			return replacementCount, fmt.Errorf("failed to recreate zip reader: %w", err)
 		}
 	}
 	
@@ -331,19 +373,6 @@ func (d *StreamingWordDocument) streamAndModifyXML(src *zip.File, dst *zip.Write
 
 // copyZipFile copies a file from source zip to destination zip without modification
 func (d *StreamingWordDocument) copyZipFile(src *zip.File, dst *zip.Writer) error {
-	reader, err := src.Open()
-	if err != nil {
-		return fmt.Errorf("failed to open source file: %w", err)
-	}
-	defer reader.Close()
-	
-	// Create destination file with same metadata
-	header := src.FileHeader
-	writer, err := dst.CreateHeader(&header)
-	if err != nil {
-		return fmt.Errorf("failed to create destination file: %w", err)
-	}
-	
 	// Use buffer from pool if available
 	var buffer []byte
 	if d.options.EnableMemoryPool && d.memPool != nil {
@@ -353,12 +382,10 @@ func (d *StreamingWordDocument) copyZipFile(src *zip.File, dst *zip.Writer) erro
 		buffer = make([]byte, d.options.ChunkSize)
 	}
 	
-	// Stream copy with buffer
-	_, err = io.CopyBuffer(writer, reader, buffer)
+	err := CopyZipFileWithCompression(src, dst, buffer)
 	if err != nil {
-		return fmt.Errorf("failed to copy file content: %w", err)
+		return fmt.Errorf("failed to copy zip file: %w", err)
 	}
-	
 	return nil
 }
 
@@ -400,31 +427,3 @@ func GetEstimatedMemoryForFile(path string) (int64, error) {
 	return estimatedMemory, nil
 }
 
-// AdaptiveStreamingOptions returns options based on file size
-func AdaptiveStreamingOptions(fileSize int64) *StreamingOptions {
-	opts := DefaultStreamingOptions()
-	
-	switch {
-	case fileSize < 1*1024*1024: // < 1MB - small file
-		opts.ChunkSize = 16 * 1024 // 16KB chunks
-		opts.MaxMemory = 10 * 1024 * 1024 // 10MB max
-		opts.EnableMemoryPool = false // Not needed for small files
-		
-	case fileSize < 10*1024*1024: // < 10MB - medium file
-		opts.ChunkSize = 64 * 1024 // 64KB chunks
-		opts.MaxMemory = 50 * 1024 * 1024 // 50MB max
-		opts.EnableMemoryPool = true
-		
-	case fileSize < 100*1024*1024: // < 100MB - large file
-		opts.ChunkSize = 256 * 1024 // 256KB chunks
-		opts.MaxMemory = 100 * 1024 * 1024 // 100MB max
-		opts.EnableMemoryPool = true
-		
-	default: // >= 100MB - very large file
-		opts.ChunkSize = 1024 * 1024 // 1MB chunks
-		opts.MaxMemory = 200 * 1024 * 1024 // 200MB max
-		opts.EnableMemoryPool = true
-	}
-	
-	return opts
-}

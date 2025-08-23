@@ -31,6 +31,8 @@
 - YAML 기반 규칙 파일로 쉬운 관리
 - 재귀적 디렉토리 처리 및 패턴 제외 기능
 - 동시 처리로 40-70% 성능 향상
+- **대용량 파일 스트리밍 처리**: 10MB 이상 파일을 위한 메모리 효율적 처리
+- **실시간 메모리 모니터링**: 메모리 사용량 추적 및 경고 시스템
 - 자동 백업 생성 기능
 - 프로그레스 바와 색상 출력으로 진행 상황 추적
 
@@ -182,6 +184,12 @@ dox replace --rules rules.yml --path ./문서폴더 --concurrent --max-workers 8
 
 # 특정 파일 제외
 dox replace --rules rules.yml --path . --exclude "*.backup"
+
+# 대용량 파일 스트리밍 처리 (메모리 효율적)
+dox replace --rules rules.yml --path large-doc.docx --streaming
+
+# 메모리 모니터링과 함께 처리
+dox replace --rules rules.yml --path ./docs --streaming --memory-monitor
 ```
 
 ### 2. 마크다운을 Office 문서로 변환

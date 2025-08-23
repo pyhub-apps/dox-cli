@@ -34,27 +34,27 @@ func TestStreamingOptions(t *testing.T) {
 		}{
 			{
 				name:      "SmallFile",
-				fileSize:  500 * 1024, // 500KB
-				wantChunk: 16 * 1024,
-				wantMax:   10 * 1024 * 1024,
+				fileSize:  500 * 1024, // 500KB - less than 10MB
+				wantChunk: 32 * 1024,  // Based on AdaptiveStreamingOptions logic
+				wantMax:   50 * 1024 * 1024,
 			},
 			{
 				name:      "MediumFile",
-				fileSize:  5 * 1024 * 1024, // 5MB
-				wantChunk: 64 * 1024,
+				fileSize:  5 * 1024 * 1024, // 5MB - less than 10MB
+				wantChunk: 32 * 1024,       // Still uses small file settings
 				wantMax:   50 * 1024 * 1024,
 			},
 			{
 				name:      "LargeFile",
-				fileSize:  50 * 1024 * 1024, // 50MB
-				wantChunk: 256 * 1024,
-				wantMax:   100 * 1024 * 1024,
+				fileSize:  50 * 1024 * 1024, // 50MB - less than 100MB
+				wantChunk: 128 * 1024,        // Based on 50-100MB range
+				wantMax:   200 * 1024 * 1024,
 			},
 			{
 				name:      "VeryLargeFile",
-				fileSize:  200 * 1024 * 1024, // 200MB
-				wantChunk: 1024 * 1024,
-				wantMax:   200 * 1024 * 1024,
+				fileSize:  200 * 1024 * 1024, // 200MB - greater than 100MB
+				wantChunk: 256 * 1024,         // Based on >=100MB range
+				wantMax:   500 * 1024 * 1024,
 			},
 		}
 		
