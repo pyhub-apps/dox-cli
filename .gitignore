@@ -20,6 +20,8 @@ go.work
 # Build output
 pyhub-docs
 pyhub-docs-*
+dox
+dox-*
 dist/
 
 # IDE specific files
@@ -56,3 +58,10 @@ test-docs/
 *.pptx
 *.pdf
 *.hwp
+
+# Test output files
+test-output*
+structured-output*
+coord-test.json
+*-test.md
+*-test.html
